@@ -14,12 +14,12 @@
 //! use salah::prelude::*;
 //!
 //! let new_york_city = Coordinates::new(40.7128, -74.0059);
-//! let date          = Utc.ymd(2019, 1, 25);
-//! let params        = Configuration::with(Method::NorthAmerica, Madhab::Hanafi);
+//! let date          = Utc.with_ymd_and_hms(2019, 1, 25, 0, 0, 0).unwrap();
+//! let params        = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
 //! let prayers       = PrayerSchedule::new()
-//!                       .on(date)
+//!                       .on(&date)
 //!                       .for_location(new_york_city)
-//!                       .with_configuration(params)
+//!                       .with_parameters(params)
 //!                       .calculate();
 //! ```
 
