@@ -4,10 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use std::{
-    f64::consts::PI,
-    ops::{Add, Div, Mul, Sub},
-};
+use std::ops::{Add, Div, Mul, Sub};
 
 use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike};
 
@@ -19,7 +16,7 @@ pub trait Normalize {
 
 impl Normalize for f64 {
     fn normalized_to_scale(&self, max: f64) -> f64 {
-        self - (max * (self / max).floor())
+        max.mul_add(-(self / max).floor(), *self)
     }
 }
 
@@ -136,7 +133,7 @@ impl Angle {
             // to the default value.
             self
         } else {
-            let value = self.degrees - (360.0 * (self.degrees / 360.0).round());
+            let value = 360.0f64.mul_add(-(self.degrees / 360.0).round(), self.degrees);
             Self { degrees: value }
         }
     }
