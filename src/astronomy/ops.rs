@@ -58,8 +58,11 @@ pub fn mean_solar_anomaly(julian_century: f64) -> Angle {
 pub fn solar_equation_of_the_center(julian_century: f64, mean_anomaly: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 164
     let mean_radians = mean_anomaly.radians();
-    let term1 = (1.914_602 - (0.004_817 * julian_century) - (0.000_014 * julian_century.powi(2))) * mean_radians.sin();
-    let term2 = (0.019_993 - (0.000_101 * julian_century)) * (2.0 * mean_radians).sin();
+    let term1 = 0.000_014f64.mul_add(
+        -julian_century.powi(2),
+        0.004_817f64.mul_add(-julian_century, 1.914_602),
+    ) * mean_radians.sin();
+    let term2 = 0.000_101f64.mul_add(-julian_century, 0.019_993) * (2.0 * mean_radians).sin();
     let term3 = 0.000_289 * (3.0 * mean_radians).sin();
 
     Angle::new(term1 + term2 + term3)
@@ -70,8 +73,8 @@ pub fn solar_equation_of_the_center(julian_century: f64, mean_anomaly: Angle) ->
 pub fn apparent_solar_longitude(julian_century: f64, mean_longitude: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 164
     let longitude = mean_longitude + solar_equation_of_the_center(julian_century, mean_solar_anomaly(julian_century));
-    let omega = Angle::new(125.04 - (1934.136 * julian_century));
-    let lambda = Angle::new(longitude.degrees - 0.00569 - (0.00478 * omega.radians().sin()));
+    let omega = Angle::new(1934.136f64.mul_add(-julian_century, 125.04));
+    let lambda = Angle::new(0.00478f64.mul_add(-omega.radians().sin(), longitude.degrees - 0.00569));
 
     lambda.unwound()
 }
@@ -92,15 +95,18 @@ pub fn mean_obliquity_of_the_ecliptic(julian_century: f64) -> Angle {
 // calculating the apparent position of the sun.
 pub fn apparent_obliquity_of_the_ecliptic(julian_century: f64, mean_obliquity_of_the_ecliptic: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 165
-    let degrees: f64 = 125.04 - (1934.136 * julian_century);
+    let degrees: f64 = 1934.136f64.mul_add(-julian_century, 125.04);
 
-    Angle::new(mean_obliquity_of_the_ecliptic.degrees + (0.00256 * Angle::new(degrees).radians().cos()))
+    Angle::new(0.00256f64.mul_add(
+        Angle::new(degrees).radians().cos(),
+        mean_obliquity_of_the_ecliptic.degrees,
+    ))
 }
 
 // Mean sidereal time, the hour angle of the vernal equinox.
 pub fn mean_sidereal_time(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 165
-    let julian_day = (julian_century * 36525.0) + 2_451_545.0;
+    let julian_day = julian_century.mul_add(36525.0, 2_451_545.0);
     let term1 = 280.460_618_37;
     let term2 = 360.985_647_366_29 * (julian_day - 2_451_545.0);
     let term3 = 0.000_387_933 * julian_century.powi(2);
@@ -158,7 +164,7 @@ pub fn corrected_transit(
 ) -> f64 {
     // Equation from page Astronomical Algorithms 102
     let longitude_angle = longitude * Angle::new(-1.0);
-    let plane_angle = Angle::new(sidereal_time.degrees + (360.985_647 * approximate_transit)).unwound();
+    let plane_angle = Angle::new(360.985_647f64.mul_add(approximate_transit, sidereal_time.degrees)).unwound();
     let interpolated_angles = interpolate_angles(
         right_ascension,
         previous_right_ascension,
@@ -187,7 +193,11 @@ pub fn corrected_hour_angle(
 ) -> f64 {
     // Equation from page Astronomical Algorithms 102
     let longitude_angle = coordinates.longitude_angle() * Angle::new(-1.0);
-    let term1 = angle.radians().sin() - (coordinates.latitude_angle().radians().sin() * declination.radians().sin());
+    let term1 = coordinates
+        .latitude_angle()
+        .radians()
+        .sin()
+        .mul_add(-declination.radians().sin(), angle.radians().sin());
     let term2 = coordinates.latitude_angle().radians().cos() * declination.radians().cos();
     let term_angle = Angle::from_radians((term1 / term2).acos());
 
@@ -197,7 +207,7 @@ pub fn corrected_hour_angle(
         approximate_transit - (term_angle.degrees / 360.0)
     };
 
-    let plane_angle = Angle::new(sidereal_time.degrees + (360.985_647 * adjusted_approx_transit)).unwound();
+    let plane_angle = Angle::new(360.985_647f64.mul_add(adjusted_approx_transit, sidereal_time.degrees)).unwound();
     let interpolated_angles = interpolate_angles(
         right_ascension,
         previous_right_ascension,
@@ -233,7 +243,7 @@ pub fn interpolate(value: f64, previous_value: f64, next_value: f64, factor: f64
     let b = next_value - value;
     let c = b - a;
 
-    value + ((factor / 2.0) * (a + b + (factor * c)))
+    (factor / 2.0).mul_add(factor.mul_add(c, a + b), value)
 }
 
 // Interpolation of three angles, accounting for angle unwinding.
@@ -243,7 +253,7 @@ pub fn interpolate_angles(value: Angle, previous_value: Angle, next_value: Angle
     let b = (next_value - value).unwound();
     let c = b - a;
 
-    Angle::new(value.degrees + ((factor / 2.0) * (a.degrees + b.degrees + (factor * c.degrees))))
+    Angle::new((factor / 2.0).mul_add(factor.mul_add(c.degrees, a.degrees + b.degrees), value.degrees))
 }
 
 // The Julian Day for the given Gregorian date.
@@ -298,17 +308,17 @@ fn twilight_adjustments(daytime: AdjustmentDaytime, latitude: f64, dyy: f64, sha
     let adjustment_values = twilight_adjustment_values(daytime, latitude, shafaq);
 
     if (0.00..=90.0).contains(&dyy) {
-        adjustment_values.a + (adjustment_values.b - adjustment_values.a) / 91.0 * dyy
+        ((adjustment_values.b - adjustment_values.a) / 91.0).mul_add(dyy, adjustment_values.a)
     } else if (91.0..=136.0).contains(&dyy) {
-        adjustment_values.b + (adjustment_values.c - adjustment_values.b) / 46.0 * (dyy - 91.0)
+        ((adjustment_values.c - adjustment_values.b) / 46.0).mul_add(dyy - 91.0, adjustment_values.b)
     } else if (137.0..=182.0).contains(&dyy) {
-        adjustment_values.c + (adjustment_values.d - adjustment_values.c) / 46.0 * (dyy - 137.0)
+        ((adjustment_values.d - adjustment_values.c) / 46.0).mul_add(dyy - 137.0, adjustment_values.c)
     } else if (183.0..=228.0).contains(&dyy) {
-        adjustment_values.d + (adjustment_values.c - adjustment_values.d) / 46.0 * (dyy - 183.0)
+        ((adjustment_values.c - adjustment_values.d) / 46.0).mul_add(dyy - 183.0, adjustment_values.d)
     } else if (229.0..=274.0).contains(&dyy) {
-        adjustment_values.c + (adjustment_values.b - adjustment_values.c) / 46.0 * (dyy - 229.0)
+        ((adjustment_values.b - adjustment_values.c) / 46.0).mul_add(dyy - 229.0, adjustment_values.c)
     } else {
-        adjustment_values.b + (adjustment_values.a - adjustment_values.b) / 91.0 * (dyy - 275.0)
+        ((adjustment_values.a - adjustment_values.b) / 91.0).mul_add(dyy - 275.0, adjustment_values.b)
     }
 }
 
@@ -329,30 +339,30 @@ struct TwilightAdjustmentValues {
 fn twilight_adjustment_values(daytime: AdjustmentDaytime, latitude: f64, shafaq: Shafaq) -> TwilightAdjustmentValues {
     if daytime == AdjustmentDaytime::Morning {
         TwilightAdjustmentValues {
-            a: 75.0 + ((28.65 / 55.0) * latitude.abs()),
-            b: 75.0 + ((19.44 / 55.0) * latitude.abs()),
-            c: 75.0 + ((32.74 / 55.0) * latitude.abs()),
-            d: 75.0 + ((48.10 / 55.0) * latitude.abs()),
+            a: (28.65f64 / 55.0).mul_add(latitude.abs(), 75.0),
+            b: (19.44f64 / 55.0).mul_add(latitude.abs(), 75.0),
+            c: (32.74f64 / 55.0).mul_add(latitude.abs(), 75.0),
+            d: (48.10f64 / 55.0).mul_add(latitude.abs(), 75.0),
         }
     } else {
         match shafaq {
             Shafaq::General => TwilightAdjustmentValues {
-                a: 75.0 + ((25.60 / 55.0) * latitude.abs()),
-                b: 75.0 + ((2.050 / 55.0) * latitude.abs()),
-                c: 75.0 - ((9.210 / 55.0) * latitude.abs()),
-                d: 75.0 + ((6.140 / 55.0) * latitude.abs()),
+                a: (25.60f64 / 55.0).mul_add(latitude.abs(), 75.0),
+                b: (2.050f64 / 55.0).mul_add(latitude.abs(), 75.0),
+                c: (9.210f64 / 55.0).mul_add(-latitude.abs(), 75.0),
+                d: (6.140f64 / 55.0).mul_add(latitude.abs(), 75.0),
             },
             Shafaq::Ahmer => TwilightAdjustmentValues {
-                a: 62.0 + ((17.40 / 55.0) * latitude.abs()),
-                b: 62.0 - ((7.160 / 55.0) * latitude.abs()),
-                c: 62.0 + ((5.120 / 55.0) * latitude.abs()),
-                d: 62.0 + ((19.44 / 55.0) * latitude.abs()),
+                a: (17.40f64 / 55.0).mul_add(latitude.abs(), 62.0),
+                b: (7.160f64 / 55.0).mul_add(-latitude.abs(), 62.0),
+                c: (5.120f64 / 55.0).mul_add(latitude.abs(), 62.0),
+                d: (19.44f64 / 55.0).mul_add(latitude.abs(), 62.0),
             },
             Shafaq::Abyad => TwilightAdjustmentValues {
-                a: 75.0 + ((25.60 / 55.0) * latitude.abs()),
-                b: 75.0 + ((7.160 / 55.0) * latitude.abs()),
-                c: 75.0 + ((36.84 / 55.0) * latitude.abs()),
-                d: 75.0 + ((81.84 / 55.0) * latitude.abs()),
+                a: (25.60f64 / 55.0).mul_add(latitude.abs(), 75.0),
+                b: (7.160f64 / 55.0).mul_add(latitude.abs(), 75.0),
+                c: (36.84f64 / 55.0).mul_add(latitude.abs(), 75.0),
+                d: (81.84f64 / 55.0).mul_add(latitude.abs(), 75.0),
             },
         }
     }
