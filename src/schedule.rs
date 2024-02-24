@@ -37,15 +37,21 @@ pub struct PrayerTimes {
 
 impl std::fmt::Display for PrayerTimes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = format!("Date: {}\n\n", self.fajr.date_naive());
+        let prayer_table = tabled::col![
+            self.fajr.date_naive().format("%A, %-d %B, %C%y"),
+            tabled::row![
+                tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
+                tabled::col![
+                    self.fajr.time().format("%H:%M"),
+                    self.dhuhr.time().format("%H:%M"),
+                    self.asr.time().format("%H:%M"),
+                    self.maghrib.time().format("%H:%M"),
+                    self.isha.time().format("%H:%M")
+                ]
+            ],
+        ];
 
-        result += &format!("Fajr: {}\n", self.fajr.time());
-        result += &format!("Dhuhr: {}\n", self.dhuhr.time());
-        result += &format!("Asr: {}\n", self.asr.time());
-        result += &format!("Maghrib: {}\n", self.maghrib.time());
-        result += &format!("Isha: {}\n", self.isha.time());
-
-        write!(f, "{result}")
+        write!(f, "{prayer_table}")
     }
 }
 
