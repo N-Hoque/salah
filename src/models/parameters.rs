@@ -175,14 +175,16 @@ impl Configuration {
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::assert_approx_eq;
+
     use super::*;
 
     #[test]
     fn calculate_parameters_with_fajr_and_isha_angles() {
         let params = Parameters::new(18.0, 18.0);
 
-        assert_eq!(params.fajr_angle, 18.0);
-        assert_eq!(params.isha_angle, 18.0);
+        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -190,8 +192,8 @@ mod tests {
     fn calculated_night_portions_middle_of_the_night() {
         let params = Parameters::new(18.0, 18.0);
 
-        assert_eq!(params.night_portions().0, 1.0 / 2.0);
-        assert_eq!(params.night_portions().1, 1.0 / 2.0);
+        assert_approx_eq!(f64, params.night_portions().0, 1.0 / 2.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().1, 1.0 / 2.0, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -200,8 +202,8 @@ mod tests {
             .high_latitude_rule(HighLatitudeRule::SeventhOfTheNight)
             .done();
 
-        assert_eq!(params.night_portions().0, 1.0 / 7.0);
-        assert_eq!(params.night_portions().1, 1.0 / 7.0);
+        assert_approx_eq!(f64, params.night_portions().0, 1.0 / 7.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().1, 1.0 / 7.0, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -210,8 +212,8 @@ mod tests {
             .high_latitude_rule(HighLatitudeRule::TwilightAngle)
             .done();
 
-        assert_eq!(params.night_portions().0, 10.0 / 60.0);
-        assert_eq!(params.night_portions().1, 15.0 / 60.0);
+        assert_approx_eq!(f64, params.night_portions().0, 10.0 / 60.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().1, 15.0 / 60.0, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -219,8 +221,8 @@ mod tests {
         let params = Configuration::with(Method::NorthAmerica, Madhab::Hanafi);
 
         assert_eq!(params.method, Method::NorthAmerica);
-        assert_eq!(params.fajr_angle, 15.0);
-        assert_eq!(params.isha_angle, 15.0);
+        assert_approx_eq!(f64, params.fajr_angle, 15.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 15.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
         assert_eq!(params.madhab, Madhab::Hanafi);
     }

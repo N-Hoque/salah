@@ -398,13 +398,15 @@ pub fn adjust_time(date: &DateTime<Utc>, minutes: i64) -> DateTime<Utc> {
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::assert_approx_eq;
+
     use super::*;
 
     #[test]
     fn calculate_julian_day() {
         let julian_day = julian_day(1992, 10, 13, 0.0);
 
-        assert_eq!(julian_day, 2_448_908.5);
+        assert_approx_eq!(f64, julian_day, 2_448_908.5, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -412,7 +414,7 @@ mod tests {
         let julian_day = julian_day(1992, 10, 13, 0.0);
         let julian_century = julian_century(julian_day);
 
-        assert_eq!(julian_century, -0.072_183_436_002_737_86);
+        assert_approx_eq!(f64, julian_century, -0.072_183_436_002_737_86, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -421,7 +423,12 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_solar_longitude = mean_solar_longitude(julian_century);
 
-        assert_eq!(mean_solar_longitude.degrees, 201.807_193_206_707_32);
+        assert_approx_eq!(
+            f64,
+            mean_solar_longitude.degrees,
+            201.807_193_206_707_32,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -431,7 +438,12 @@ mod tests {
         let mean_solar_longitude = mean_solar_longitude(julian_century);
         let apparent_solar_longitude = apparent_solar_longitude(julian_century, mean_solar_longitude).radians();
 
-        assert_eq!(apparent_solar_longitude, 3.489_069_182_045_206);
+        assert_approx_eq!(
+            f64,
+            apparent_solar_longitude,
+            3.489_069_182_045_206,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -440,7 +452,12 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_obliq_of_ecliptic = mean_obliquity_of_the_ecliptic(julian_century);
 
-        assert_eq!(mean_obliq_of_ecliptic.degrees, 23.440_229_684_413_012);
+        assert_approx_eq!(
+            f64,
+            mean_obliq_of_ecliptic.degrees,
+            23.440_229_684_413_012,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -450,7 +467,12 @@ mod tests {
         let mean_obliq_of_ecliptic = mean_obliquity_of_the_ecliptic(julian_century);
         let apparent_obliq_of_ecliptic = apparent_obliquity_of_the_ecliptic(julian_century, mean_obliq_of_ecliptic);
 
-        assert_eq!(apparent_obliq_of_ecliptic.degrees, 23.439_991_106_199_55);
+        assert_approx_eq!(
+            f64,
+            apparent_obliq_of_ecliptic.degrees,
+            23.439_991_106_199_55,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -459,7 +481,12 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_solar_anomaly = mean_solar_anomaly(julian_century);
 
-        assert_eq!(mean_solar_anomaly.degrees, 278.993_966_431_597_5);
+        assert_approx_eq!(
+            f64,
+            mean_solar_anomaly.degrees,
+            278.993_966_431_597_5,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -469,7 +496,12 @@ mod tests {
         let mean_solar_anomaly = mean_solar_anomaly(julian_century);
         let solar_equation_of_center = solar_equation_of_the_center(julian_century, mean_solar_anomaly);
 
-        assert_eq!(solar_equation_of_center.degrees, -1.897_323_843_371_985);
+        assert_approx_eq!(
+            f64,
+            solar_equation_of_center.degrees,
+            -1.897_323_843_371_985,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -478,7 +510,12 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_lunar_longitude = mean_lunar_longitude(julian_century);
 
-        assert_eq!(mean_lunar_longitude.degrees, 38.747_190_008_209_145);
+        assert_approx_eq!(
+            f64,
+            mean_lunar_longitude.degrees,
+            38.747_190_008_209_145,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -487,7 +524,12 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let ascending_lunar_node = ascending_lunar_node_longitude(julian_century);
 
-        assert_eq!(ascending_lunar_node.degrees, 264.657_131_805_429);
+        assert_approx_eq!(
+            f64,
+            ascending_lunar_node.degrees,
+            264.657_131_805_429,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -496,7 +538,12 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_sidereal_time = mean_sidereal_time(julian_century);
 
-        assert_eq!(mean_sidereal_time.degrees, 21.801_339_167_752_303);
+        assert_approx_eq!(
+            f64,
+            mean_sidereal_time.degrees,
+            21.801_339_167_752_303,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -509,7 +556,12 @@ mod tests {
         let nutation_longitude =
             nutation_in_longitude(mean_solar_longitude, mean_lunar_longitude, ascending_lunar_node);
 
-        assert_eq!(nutation_longitude, 0.004_452_535_816_968_656_4);
+        assert_approx_eq!(
+            f64,
+            nutation_longitude,
+            0.004_452_535_816_968_656_4,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -521,7 +573,12 @@ mod tests {
         let ascending_lunar_node = ascending_lunar_node_longitude(julian_century);
         let nutation_obliq = nutation_in_obliquity(mean_solar_longitude, mean_lunar_longitude, ascending_lunar_node);
 
-        assert_eq!(nutation_obliq, -0.000_092_747_500_292_341_56);
+        assert_approx_eq!(
+            f64,
+            nutation_obliq,
+            -0.000_092_747_500_292_341_56,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -532,6 +589,11 @@ mod tests {
         let celestial_body =
             altitude_of_celestial_body(coordinates.latitude_angle(), declination_angle, local_hour_angle);
 
-        assert_eq!(celestial_body.degrees, -0.900_615_621_559_432_1);
+        assert_approx_eq!(
+            f64,
+            celestial_body.degrees,
+            -0.900_615_621_559_432_1,
+            epsilon = 0.000_000_1
+        );
     }
 }
