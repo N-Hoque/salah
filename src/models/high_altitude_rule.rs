@@ -45,8 +45,8 @@ mod tests {
     #[test]
     fn recommended_rule_seventh_of_night() {
         let location = Coordinates {
-            latitude: 48.983226,
-            longitude: -3.216649,
+            latitude: 48.983_226,
+            longitude: -3.216_649,
         };
 
         assert_eq!(
@@ -58,8 +58,8 @@ mod tests {
     #[test]
     fn recommended_rule_middle_of_night() {
         let location = Coordinates {
-            latitude: 45.983226,
-            longitude: -3.216649,
+            latitude: 45.983_226,
+            longitude: -3.216_649,
         };
 
         assert_eq!(

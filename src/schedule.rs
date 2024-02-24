@@ -11,13 +11,14 @@
 
 use chrono::{Date, DateTime, Datelike, Duration, Utc};
 
-use crate::astronomy::ops;
-use crate::astronomy::solar::SolarTime;
-use crate::astronomy::unit::{Angle, Coordinates, Stride};
-use crate::models::method::Method;
-use crate::models::parameters::Parameters;
-use crate::models::prayer::Prayer;
-use crate::models::rounding::Rounding;
+use crate::{
+    astronomy::{
+        ops,
+        solar::SolarTime,
+        unit::{Angle, Coordinates, Stride},
+    },
+    models::{method::Method, parameters::Parameters, prayer::Prayer, rounding::Rounding},
+};
 
 /// A data struct to hold the timing for all
 /// prayers.
@@ -38,6 +39,7 @@ pub struct PrayerTimes {
 }
 
 impl PrayerTimes {
+    #[must_use]
     pub fn new(date: Date<Utc>, coordinates: Coordinates, parameters: Parameters) -> PrayerTimes {
         let prayer_date = date.and_hms(0, 0, 0);
         let tomorrow = prayer_date.tomorrow();
@@ -45,39 +47,29 @@ impl PrayerTimes {
         let solar_time_tomorrow = SolarTime::new(tomorrow, coordinates);
 
         let asr = solar_time.afternoon(parameters.madhab.shadow().into());
-        let night = solar_time_tomorrow
-            .sunrise
-            .signed_duration_since(solar_time.sunset);
+        let night = solar_time_tomorrow.sunrise.signed_duration_since(solar_time.sunset);
 
-        let final_fajr =
-            PrayerTimes::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date)
-				.rounded_minute(parameters.rounding);
+        let final_fajr = PrayerTimes::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date)
+            .rounded_minute(parameters.rounding);
         let final_sunrise = solar_time
             .sunrise
             .adjust_time(parameters.time_adjustments(Prayer::Sunrise))
-			.rounded_minute(parameters.rounding);
+            .rounded_minute(parameters.rounding);
         let final_dhuhr = solar_time
             .transit
             .adjust_time(parameters.time_adjustments(Prayer::Dhuhr))
-			.rounded_minute(parameters.rounding);
-        let final_asr = asr.adjust_time(parameters.time_adjustments(Prayer::Asr))
-			.rounded_minute(parameters.rounding);
-        let final_maghrib = ops::adjust_time(
-            &solar_time.sunset,
-            parameters.time_adjustments(Prayer::Maghrib)).rounded_minute(parameters.rounding);
-        let final_isha =
-            PrayerTimes::calculate_isha(parameters, solar_time, night, coordinates, prayer_date)
-				.rounded_minute(parameters.rounding);
+            .rounded_minute(parameters.rounding);
+        let final_asr = asr
+            .adjust_time(parameters.time_adjustments(Prayer::Asr))
+            .rounded_minute(parameters.rounding);
+        let final_maghrib = ops::adjust_time(&solar_time.sunset, parameters.time_adjustments(Prayer::Maghrib))
+            .rounded_minute(parameters.rounding);
+        let final_isha = PrayerTimes::calculate_isha(parameters, solar_time, night, coordinates, prayer_date)
+            .rounded_minute(parameters.rounding);
 
         // Calculate the middle of the night and qiyam times
         let (final_middle_of_night, final_qiyam, final_fajr_tomorrow) =
-            PrayerTimes::calculate_qiyam(
-                final_maghrib,
-                parameters,
-                solar_time_tomorrow,
-                coordinates,
-                tomorrow,
-            );
+            PrayerTimes::calculate_qiyam(final_maghrib, parameters, solar_time_tomorrow, coordinates, tomorrow);
 
         PrayerTimes {
             fajr: final_fajr,
@@ -89,12 +81,13 @@ impl PrayerTimes {
             middle_of_the_night: final_middle_of_night,
             qiyam: final_qiyam,
             fajr_tomorrow: final_fajr_tomorrow,
-            coordinates: coordinates,
+            coordinates,
             date: prayer_date,
-            parameters: parameters,
+            parameters,
         }
     }
 
+    #[must_use]
     pub fn time(&self, prayer: Prayer) -> DateTime<Utc> {
         match prayer {
             Prayer::Fajr => self.fajr,
@@ -108,10 +101,12 @@ impl PrayerTimes {
         }
     }
 
+    #[must_use]
     pub fn current(&self) -> Prayer {
         self.current_time(Utc::now()).expect("Out of bounds")
     }
 
+    #[must_use]
     pub fn next(&self) -> Prayer {
         match self.current() {
             Prayer::Fajr => Prayer::Sunrise,
@@ -125,6 +120,7 @@ impl PrayerTimes {
         }
     }
 
+    #[must_use]
     pub fn time_remaining(&self) -> (u32, u32) {
         let next_time = self.time(self.next());
         let now = Utc::now();
@@ -141,9 +137,9 @@ impl PrayerTimes {
         let current_prayer: Option<Prayer>;
 
         if self.fajr_tomorrow.signed_duration_since(time).num_seconds() <= 0 {
-            current_prayer = Some(Prayer::FajrTomorrow)
+            current_prayer = Some(Prayer::FajrTomorrow);
         } else if self.qiyam.signed_duration_since(time).num_seconds() <= 0 {
-            current_prayer = Some(Prayer::Qiyam)
+            current_prayer = Some(Prayer::Qiyam);
         } else if self.isha.signed_duration_since(time).num_seconds() <= 0 {
             current_prayer = Some(Prayer::Isha);
         } else if self.maghrib.signed_duration_since(time).num_seconds() <= 0 {
@@ -222,7 +218,7 @@ impl PrayerTimes {
         if parameters.isha_interval > 0 {
             isha = solar_time
                 .sunset
-                .checked_add_signed(Duration::seconds((parameters.isha_interval * 60) as i64))
+                .checked_add_signed(Duration::seconds(i64::from(parameters.isha_interval * 60)))
                 .unwrap();
         } else {
             isha = solar_time.time_for_solar_angle(Angle::new(-parameters.isha_angle), true);
@@ -277,15 +273,10 @@ impl PrayerTimes {
     ) -> (DateTime<Utc>, DateTime<Utc>, DateTime<Utc>) {
         let tomorrow = prayer_date.tomorrow();
         let solar_time_tomorrow = SolarTime::new(tomorrow, coordinates);
-        let night = solar_time_tomorrow
-            .sunrise
-            .signed_duration_since(solar_time.sunset);
+        let night = solar_time_tomorrow.sunrise.signed_duration_since(solar_time.sunset);
 
-        let tomorrow_fajr =
-            PrayerTimes::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date);
-        let night_duration = tomorrow_fajr
-            .signed_duration_since(current_maghrib)
-            .num_seconds() as f64;
+        let tomorrow_fajr = PrayerTimes::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date);
+        let night_duration = tomorrow_fajr.signed_duration_since(current_maghrib).num_seconds() as f64;
         let middle_night_portion = (night_duration / 2.0) as i64;
         let last_third_portion = (night_duration * (2.0 / 3.0)) as i64;
         let middle_of_night = current_maghrib
@@ -301,14 +292,21 @@ impl PrayerTimes {
     }
 }
 
-/// A builder for the [PrayerTimes](struct.PrayerTimes.html) struct.
+/// A builder for the [`PrayerTimes`](struct.PrayerTimes.html) struct.
 pub struct PrayerSchedule {
     date: Option<Date<Utc>>,
     coordinates: Option<Coordinates>,
     params: Option<Parameters>,
 }
 
+impl Default for PrayerSchedule {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PrayerSchedule {
+    #[must_use]
     pub fn new() -> PrayerSchedule {
         PrayerSchedule {
             date: None,
@@ -317,17 +315,17 @@ impl PrayerSchedule {
         }
     }
 
-    pub fn on<'a>(&'a mut self, date: Date<Utc>) -> &'a mut PrayerSchedule {
+    pub fn on(&mut self, date: Date<Utc>) -> &mut PrayerSchedule {
         self.date = Some(date);
         self
     }
 
-    pub fn for_location<'a>(&'a mut self, location: Coordinates) -> &'a mut PrayerSchedule {
+    pub fn for_location(&mut self, location: Coordinates) -> &mut PrayerSchedule {
         self.coordinates = Some(location);
         self
     }
 
-    pub fn with_configuration<'a>(&'a mut self, params: Parameters) -> &'a mut PrayerSchedule {
+    pub fn with_configuration(&mut self, params: Parameters) -> &mut PrayerSchedule {
         self.params = Some(params);
         self
     }
@@ -349,10 +347,10 @@ impl PrayerSchedule {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::models::madhab::Madhab;
-    use crate::Configuration;
     use chrono::{TimeZone, Utc};
+
+    use super::*;
+    use crate::{models::madhab::Madhab, Configuration};
 
     #[test]
     fn current_prayer_should_be_fajr() {
@@ -375,10 +373,7 @@ mod tests {
         let times = PrayerTimes::new(local_date, coordinates, params);
         let current_prayer_time = local_date.with_timezone(&Utc).and_hms(11, 0, 0);
 
-        assert_eq!(
-            times.current_time(current_prayer_time),
-            Some(Prayer::Sunrise)
-        );
+        assert_eq!(times.current_time(current_prayer_time), Some(Prayer::Sunrise));
     }
 
     #[test]
@@ -414,10 +409,7 @@ mod tests {
         let times = PrayerTimes::new(local_date, coordinates, params);
         let current_prayer_time = Utc.ymd(2015, 7, 13).and_hms(01, 0, 0);
 
-        assert_eq!(
-            times.current_time(current_prayer_time),
-            Some(Prayer::Maghrib)
-        );
+        assert_eq!(times.current_time(current_prayer_time), Some(Prayer::Maghrib));
     }
 
     #[test]
@@ -462,36 +454,18 @@ mod tests {
                 // asr     = 2016-01-31 20:20:00 UTC
                 // maghrib = 2016-01-31 22:43:00 UTC
                 // isha    = 2016-02-01 00:05:00 UTC
+                assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "10:48 AM");
                 assert_eq!(
-                    schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(),
-                    "10:48 AM"
-                );
-                assert_eq!(
-                    schedule
-                        .time(Prayer::Sunrise)
-                        .format("%-l:%M %p")
-                        .to_string(),
+                    schedule.time(Prayer::Sunrise).format("%-l:%M %p").to_string(),
                     "12:16 PM"
                 );
+                assert_eq!(schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(), "5:33 PM");
+                assert_eq!(schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(), "8:20 PM");
                 assert_eq!(
-                    schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(),
-                    "5:33 PM"
-                );
-                assert_eq!(
-                    schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(),
-                    "8:20 PM"
-                );
-                assert_eq!(
-                    schedule
-                        .time(Prayer::Maghrib)
-                        .format("%-l:%M %p")
-                        .to_string(),
+                    schedule.time(Prayer::Maghrib).format("%-l:%M %p").to_string(),
                     "10:43 PM"
                 );
-                assert_eq!(
-                    schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(),
-                    "12:05 AM"
-                );
+                assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "12:05 AM");
             }
 
             Err(_err) => assert!(false),
@@ -517,36 +491,18 @@ mod tests {
                 // asr     = 2016-01-01 12:36:00 UTC
                 // maghrib = 2016-01-01 14:25:00 UTC
                 // isha    = 2016-01-01 16:02:00 UTC
+                assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "6:34 AM");
                 assert_eq!(
-                    schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(),
-                    "6:34 AM"
-                );
-                assert_eq!(
-                    schedule
-                        .time(Prayer::Sunrise)
-                        .format("%-l:%M %p")
-                        .to_string(),
+                    schedule.time(Prayer::Sunrise).format("%-l:%M %p").to_string(),
                     "8:19 AM"
                 );
+                assert_eq!(schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(), "11:25 AM");
+                assert_eq!(schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(), "12:36 PM");
                 assert_eq!(
-                    schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(),
-                    "11:25 AM"
-                );
-                assert_eq!(
-                    schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(),
-                    "12:36 PM"
-                );
-                assert_eq!(
-                    schedule
-                        .time(Prayer::Maghrib)
-                        .format("%-l:%M %p")
-                        .to_string(),
+                    schedule.time(Prayer::Maghrib).format("%-l:%M %p").to_string(),
                     "2:25 PM"
                 );
-                assert_eq!(
-                    schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(),
-                    "4:02 PM"
-                );
+                assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "4:02 PM");
             }
 
             Err(_err) => assert!(false),

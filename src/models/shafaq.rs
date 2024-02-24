@@ -5,7 +5,7 @@
 //
 
 /// Shafaq is the twilight in the sky. Different madhabs define the appearance of
-/// twilight differently. These values are used by the MoonsightingComittee method
+/// twilight differently. These values are used by the `MoonsightingComittee` method
 /// for the different ways to calculate Isha.
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Shafaq {

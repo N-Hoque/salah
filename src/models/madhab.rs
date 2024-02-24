@@ -14,6 +14,7 @@ pub enum Madhab {
 }
 
 impl Madhab {
+    #[must_use]
     pub fn shadow(&self) -> i32 {
         *self as i32
     }

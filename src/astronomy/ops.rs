@@ -6,17 +6,17 @@
 
 use chrono::{DateTime, Duration, Utc};
 
-use crate::astronomy::unit::{Angle, Coordinates};
-use crate::astronomy::unit::{Normalize, Stride};
-use crate::models::shafaq::Shafaq;
-use crate::models::rounding::Rounding;
+use crate::{
+    astronomy::unit::{Angle, Coordinates, Normalize, Stride},
+    models::{rounding::Rounding, shafaq::Shafaq},
+};
 
 // The geometric mean longitude of the sun.
 pub fn mean_solar_longitude(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 163
-    let term1 = 280.4664567;
+    let term1 = 280.466_456_7;
     let term2 = 36000.76983 * julian_century;
-    let term3 = 0.0003032 * julian_century.powf(2.0);
+    let term3 = 0.000_303_2 * julian_century.powf(2.0);
     let degrees = term1 + term2 + term3;
 
     Angle::new(degrees).unwound()
@@ -26,7 +26,7 @@ pub fn mean_solar_longitude(julian_century: f64) -> Angle {
 pub fn mean_lunar_longitude(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 144
     let term1 = 218.3165;
-    let term2 = 481267.8813 * julian_century;
+    let term2 = 481_267.881_3 * julian_century;
     let degrees = term1 + term2;
 
     Angle::new(degrees).unwound()
@@ -35,9 +35,9 @@ pub fn mean_lunar_longitude(julian_century: f64) -> Angle {
 pub fn ascending_lunar_node_longitude(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 144
     let term1 = 125.04452;
-    let term2 = 1934.136261 * julian_century;
-    let term3 = 0.0020708 * julian_century.powf(2.0);
-    let term4 = julian_century.powf(3.0) / 450000.0;
+    let term2 = 1_934.136_261 * julian_century;
+    let term3 = 0.002_070_8 * julian_century.powf(2.0);
+    let term4 = julian_century.powf(3.0) / 450_000.0;
     let degrees = term1 - term2 + term3 + term4;
 
     Angle::new(degrees).unwound()
@@ -48,7 +48,7 @@ pub fn mean_solar_anomaly(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 163
     let term1 = 357.52911;
     let term2 = 35999.05029 * julian_century;
-    let term3 = 0.0001537 * julian_century.powf(2.0);
+    let term3 = 0.000_153_7 * julian_century.powf(2.0);
     let degrees = term1 + term2 - term3;
 
     Angle::new(degrees).unwound()
@@ -58,10 +58,10 @@ pub fn mean_solar_anomaly(julian_century: f64) -> Angle {
 pub fn solar_equation_of_the_center(julian_century: f64, mean_anomaly: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 164
     let mean_radians = mean_anomaly.radians();
-    let term1 = (1.914602 - (0.004817 * julian_century) - (0.000014 * julian_century.powf(2.0)))
-        * mean_radians.sin();
-    let term2 = (0.019993 - (0.000101 * julian_century)) * (2.0 * mean_radians).sin();
-    let term3 = 0.000289 * (3.0 * mean_radians).sin();
+    let term1 =
+        (1.914_602 - (0.004_817 * julian_century) - (0.000_014 * julian_century.powf(2.0))) * mean_radians.sin();
+    let term2 = (0.019_993 - (0.000_101 * julian_century)) * (2.0 * mean_radians).sin();
+    let term3 = 0.000_289 * (3.0 * mean_radians).sin();
 
     Angle::new(term1 + term2 + term3)
 }
@@ -70,8 +70,7 @@ pub fn solar_equation_of_the_center(julian_century: f64, mean_anomaly: Angle) ->
 // true equinox of the date.
 pub fn apparent_solar_longitude(julian_century: f64, mean_longitude: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 164
-    let longitude = mean_longitude
-        + solar_equation_of_the_center(julian_century, mean_solar_anomaly(julian_century));
+    let longitude = mean_longitude + solar_equation_of_the_center(julian_century, mean_solar_anomaly(julian_century));
     let omega = Angle::new(125.04 - (1934.136 * julian_century));
     let lambda = Angle::new(longitude.degrees - 0.00569 - (0.00478 * omega.radians().sin()));
 
@@ -82,46 +81,37 @@ pub fn apparent_solar_longitude(julian_century: f64, mean_longitude: Angle) -> A
 // adopted by the International Astronomical Union.
 pub fn mean_obliquity_of_the_ecliptic(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 147
-    let term1 = 23.439291;
-    let term2 = 0.013004167 * julian_century;
-    let term3 = 0.0000001639 * julian_century.powf(2.0);
-    let term4 = 0.0000005036 * julian_century.powf(3.0);
+    let term1 = 23.439_291;
+    let term2 = 0.013_004_167 * julian_century;
+    let term3 = 0.000_000_163_9 * julian_century.powf(2.0);
+    let term4 = 0.000_000_503_6 * julian_century.powf(3.0);
 
     Angle::new(term1 - term2 - term3 + term4)
 }
 
 // The mean obliquity of the ecliptic, corrected for
 // calculating the apparent position of the sun.
-pub fn apparent_obliquity_of_the_ecliptic(
-    julian_century: f64,
-    mean_obliquity_of_the_ecliptic: Angle,
-) -> Angle {
+pub fn apparent_obliquity_of_the_ecliptic(julian_century: f64, mean_obliquity_of_the_ecliptic: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 165
     let degrees: f64 = 125.04 - (1934.136 * julian_century);
 
-    Angle::new(
-        mean_obliquity_of_the_ecliptic.degrees + (0.00256 * Angle::new(degrees).radians().cos()),
-    )
+    Angle::new(mean_obliquity_of_the_ecliptic.degrees + (0.00256 * Angle::new(degrees).radians().cos()))
 }
 
 // Mean sidereal time, the hour angle of the vernal equinox.
 pub fn mean_sidereal_time(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 165
-    let julian_day = (julian_century * 36525.0) + 2451545.0;
-    let term1 = 280.46061837;
-    let term2 = 360.98564736629 * (julian_day - 2451545.0);
-    let term3 = 0.000387933 * julian_century.powf(2.0);
-    let term4 = julian_century.powf(3.0) / 38710000.0;
+    let julian_day = (julian_century * 36525.0) + 2_451_545.0;
+    let term1 = 280.460_618_37;
+    let term2 = 360.985_647_366_29 * (julian_day - 2_451_545.0);
+    let term3 = 0.000_387_933 * julian_century.powf(2.0);
+    let term4 = julian_century.powf(3.0) / 38_710_000.0;
     let degrees = term1 + term2 + term3 - term4;
 
     Angle::new(degrees).unwound()
 }
 
-pub fn nutation_in_longitude(
-    solar_longitude: Angle,
-    lunar_longitude: Angle,
-    ascending_node: Angle,
-) -> f64 {
+pub fn nutation_in_longitude(solar_longitude: Angle, lunar_longitude: Angle, ascending_node: Angle) -> f64 {
     // Equation from Astronomical Algorithms page 144
     let term1 = (-17.2 / 3600.0) * ascending_node.radians().sin();
     let term2 = (1.32 / 3600.0) * (2.0 * solar_longitude.radians()).sin();
@@ -131,11 +121,7 @@ pub fn nutation_in_longitude(
     term1 - term2 - term3 + term4
 }
 
-pub fn nutation_in_obliquity(
-    solar_longitude: Angle,
-    lunar_longitude: Angle,
-    ascending_node: Angle,
-) -> f64 {
+pub fn nutation_in_obliquity(solar_longitude: Angle, lunar_longitude: Angle, ascending_node: Angle) -> f64 {
     // Equation from Astronomical Algorithms page 144
     let term1 = (9.2 / 3600.0) * ascending_node.radians().cos();
     let term2 = (0.57 / 3600.0) * (2.0 * solar_longitude.radians()).cos();
@@ -145,16 +131,10 @@ pub fn nutation_in_obliquity(
     term1 + term2 + term3 - term4
 }
 
-pub fn altitude_of_celestial_body(
-    observer_latitude: Angle,
-    declination: Angle,
-    local_hour_angle: Angle,
-) -> Angle {
+pub fn altitude_of_celestial_body(observer_latitude: Angle, declination: Angle, local_hour_angle: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 93
     let term1 = observer_latitude.radians().sin() * declination.radians().sin();
-    let term2 = observer_latitude.radians().cos()
-        * declination.radians().cos()
-        * local_hour_angle.radians().cos();
+    let term2 = observer_latitude.radians().cos() * declination.radians().cos() * local_hour_angle.radians().cos();
 
     Angle::from_radians((term1 + term2).asin())
 }
@@ -179,8 +159,7 @@ pub fn corrected_transit(
 ) -> f64 {
     // Equation from page Astronomical Algorithms 102
     let longitude_angle = longitude * Angle::new(-1.0);
-    let plane_angle =
-        Angle::new(sidereal_time.degrees + (360.985647 * approximate_transit)).unwound();
+    let plane_angle = Angle::new(sidereal_time.degrees + (360.985_647 * approximate_transit)).unwound();
     let interpolated_angles = interpolate_angles(
         right_ascension,
         previous_right_ascension,
@@ -209,8 +188,7 @@ pub fn corrected_hour_angle(
 ) -> f64 {
     // Equation from page Astronomical Algorithms 102
     let longitude_angle = coordinates.longitude_angle() * Angle::new(-1.0);
-    let term1 = angle.radians().sin()
-        - (coordinates.latitude_angle().radians().sin() * declination.radians().sin());
+    let term1 = angle.radians().sin() - (coordinates.latitude_angle().radians().sin() * declination.radians().sin());
     let term2 = coordinates.latitude_angle().radians().cos() * declination.radians().cos();
     let term_angle = Angle::from_radians((term1 / term2).acos());
 
@@ -220,8 +198,7 @@ pub fn corrected_hour_angle(
         approximate_transit - (term_angle.degrees / 360.0)
     };
 
-    let plane_angle =
-        Angle::new(sidereal_time.degrees + (360.985647 * adjusted_approx_transit)).unwound();
+    let plane_angle = Angle::new(sidereal_time.degrees + (360.985_647 * adjusted_approx_transit)).unwound();
     let interpolated_angles = interpolate_angles(
         right_ascension,
         previous_right_ascension,
@@ -236,11 +213,8 @@ pub fn corrected_hour_angle(
         adjusted_approx_transit,
     ));
     let adjusted_angles = plane_angle - longitude_angle - interpolated_angles;
-    let celestial_body_altitude = altitude_of_celestial_body(
-        coordinates.latitude_angle(),
-        declination_angle,
-        adjusted_angles,
-    );
+    let celestial_body_altitude =
+        altitude_of_celestial_body(coordinates.latitude_angle(), declination_angle, adjusted_angles);
     let term3 = (celestial_body_altitude - angle).degrees;
     let term4 = 360.0
         * declination_angle.radians().cos()
@@ -264,12 +238,7 @@ pub fn interpolate(value: f64, previous_value: f64, next_value: f64, factor: f64
 }
 
 // Interpolation of three angles, accounting for angle unwinding.
-pub fn interpolate_angles(
-    value: Angle,
-    previous_value: Angle,
-    next_value: Angle,
-    factor: f64,
-) -> Angle {
+pub fn interpolate_angles(value: Angle, previous_value: Angle, next_value: Angle, factor: f64) -> Angle {
     // Equation from Astronomical Algorithms page 24
     let a = (value - previous_value).unwound();
     let b = (next_value - value).unwound();
@@ -286,21 +255,21 @@ pub fn julian_day(year: i32, month: i32, day: i32, hours: f64) -> f64 {
 
     let adjusted_year: i32 = if month > 2 { year } else { year - 1 };
     let adjusted_month: i32 = if month > 2 { month } else { month + 12 };
-    let adjusted_day: f64 = (day as f64) + (hours / 24.0);
+    let adjusted_day: f64 = f64::from(day) + (hours / 24.0);
 
     let a: i32 = adjusted_year / 100;
     let b: i32 = 2 - a + (a / 4);
 
-    let i0: i32 = (365.25 * ((adjusted_year as f64) + 4716.0)) as i32;
-    let i1: i32 = (30.6001 * ((adjusted_month as f64) + 1.0)) as i32;
+    let i0: i32 = (365.25 * (f64::from(adjusted_year) + 4716.0)) as i32;
+    let i1: i32 = (30.6001 * (f64::from(adjusted_month) + 1.0)) as i32;
 
-    (i0 as f64) + (i1 as f64) + adjusted_day + (b as f64) - 1524.5
+    f64::from(i0) + f64::from(i1) + adjusted_day + f64::from(b) - 1524.5
 }
 
 // Julian century from the epoch.
 pub fn julian_century(julian_day: f64) -> f64 {
     // Equation from Astronomical Algorithms page 163
-    (julian_day - 2451545.0) / 36525.0
+    (julian_day - 2_451_545.0) / 36525.0
 }
 
 // Checks if the given year is a leap year.
@@ -318,15 +287,9 @@ pub fn is_leap_year(year: u32) -> bool {
 
 // Twilight adjustment based on observational data for use
 // in the Moonsighting Committee calculation method.
-pub fn season_adjusted_morning_twilight(
-    latitude: f64,
-    day: u32,
-    year: u32,
-    sunrise: DateTime<Utc>,
-) -> DateTime<Utc> {
-    let dyy = days_since_solstice(day, year, latitude) as f64;
-    let adjustment =
-        twilight_adjustments(AdjustmentDaytime::Morning, latitude, dyy, Shafaq::General);
+pub fn season_adjusted_morning_twilight(latitude: f64, day: u32, year: u32, sunrise: DateTime<Utc>) -> DateTime<Utc> {
+    let dyy = f64::from(days_since_solstice(day, year, latitude));
+    let adjustment = twilight_adjustments(AdjustmentDaytime::Morning, latitude, dyy, Shafaq::General);
 
     let rounded_adjustment = (adjustment * -60.0).round() as i64;
     sunrise
@@ -334,12 +297,7 @@ pub fn season_adjusted_morning_twilight(
         .unwrap()
 }
 
-fn twilight_adjustments(
-    daytime: AdjustmentDaytime,
-    latitude: f64,
-    dyy: f64,
-    shafaq: Shafaq,
-) -> f64 {
+fn twilight_adjustments(daytime: AdjustmentDaytime, latitude: f64, dyy: f64, shafaq: Shafaq) -> f64 {
     let adjustment_values = twilight_adjustment_values(daytime, latitude, shafaq);
 
     if (0.00..=90.0).contains(&dyy) {
@@ -371,11 +329,7 @@ struct TwilightAdjustmentValues {
     d: f64,
 }
 
-fn twilight_adjustment_values(
-    daytime: AdjustmentDaytime,
-    latitude: f64,
-    shafaq: Shafaq,
-) -> TwilightAdjustmentValues {
+fn twilight_adjustment_values(daytime: AdjustmentDaytime, latitude: f64, shafaq: Shafaq) -> TwilightAdjustmentValues {
     if daytime == AdjustmentDaytime::Morning {
         TwilightAdjustmentValues {
             a: 75.0 + ((28.65 / 55.0) * latitude.abs()),
@@ -416,7 +370,7 @@ pub fn season_adjusted_evening_twilight(
     sunset: DateTime<Utc>,
     shafaq: Shafaq,
 ) -> DateTime<Utc> {
-    let dyy = days_since_solstice(day, year, latitude) as f64;
+    let dyy = f64::from(days_since_solstice(day, year, latitude));
     let adjustment = twilight_adjustments(AdjustmentDaytime::Evening, latitude, dyy, shafaq);
 
     let rounded_adjustment = (adjustment * 60.0).round() as i64;
@@ -448,8 +402,7 @@ pub fn days_since_solstice(day_of_year: u32, year: u32, latitude: f64) -> u32 {
 }
 
 pub fn adjust_time(date: &DateTime<Utc>, minutes: i64) -> DateTime<Utc> {
-    date.checked_add_signed(Duration::seconds(minutes * 60))
-        .unwrap()
+    date.checked_add_signed(Duration::seconds(minutes * 60)).unwrap()
 }
 
 #[cfg(test)]
@@ -460,7 +413,7 @@ mod tests {
     fn calculate_julian_day() {
         let julian_day = julian_day(1992, 10, 13, 0.0);
 
-        assert_eq!(julian_day, 2448908.5);
+        assert_eq!(julian_day, 2_448_908.5);
     }
 
     #[test]
@@ -468,7 +421,7 @@ mod tests {
         let julian_day = julian_day(1992, 10, 13, 0.0);
         let julian_century = julian_century(julian_day);
 
-        assert_eq!(julian_century, -0.072183436002737855);
+        assert_eq!(julian_century, -0.072_183_436_002_737_86);
     }
 
     #[test]
@@ -477,7 +430,7 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_solar_longitude = mean_solar_longitude(julian_century);
 
-        assert_eq!(mean_solar_longitude.degrees, 201.80719320670732);
+        assert_eq!(mean_solar_longitude.degrees, 201.807_193_206_707_32);
     }
 
     #[test]
@@ -485,10 +438,9 @@ mod tests {
         let julian_day = julian_day(1992, 10, 13, 0.0);
         let julian_century = julian_century(julian_day);
         let mean_solar_longitude = mean_solar_longitude(julian_century);
-        let apparent_solar_longitude =
-            apparent_solar_longitude(julian_century, mean_solar_longitude).radians();
+        let apparent_solar_longitude = apparent_solar_longitude(julian_century, mean_solar_longitude).radians();
 
-        assert_eq!(apparent_solar_longitude, 3.4890691820452062);
+        assert_eq!(apparent_solar_longitude, 3.489_069_182_045_206);
     }
 
     #[test]
@@ -497,7 +449,7 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_obliq_of_ecliptic = mean_obliquity_of_the_ecliptic(julian_century);
 
-        assert_eq!(mean_obliq_of_ecliptic.degrees, 23.440229684413012);
+        assert_eq!(mean_obliq_of_ecliptic.degrees, 23.440_229_684_413_012);
     }
 
     #[test]
@@ -505,10 +457,9 @@ mod tests {
         let julian_day = julian_day(1992, 10, 13, 0.0);
         let julian_century = julian_century(julian_day);
         let mean_obliq_of_ecliptic = mean_obliquity_of_the_ecliptic(julian_century);
-        let apparent_obliq_of_ecliptic =
-            apparent_obliquity_of_the_ecliptic(julian_century, mean_obliq_of_ecliptic);
+        let apparent_obliq_of_ecliptic = apparent_obliquity_of_the_ecliptic(julian_century, mean_obliq_of_ecliptic);
 
-        assert_eq!(apparent_obliq_of_ecliptic.degrees, 23.43999110619955);
+        assert_eq!(apparent_obliq_of_ecliptic.degrees, 23.439_991_106_199_55);
     }
 
     #[test]
@@ -517,7 +468,7 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_solar_anomaly = mean_solar_anomaly(julian_century);
 
-        assert_eq!(mean_solar_anomaly.degrees, 278.99396643159753);
+        assert_eq!(mean_solar_anomaly.degrees, 278.993_966_431_597_5);
     }
 
     #[test]
@@ -525,10 +476,9 @@ mod tests {
         let julian_day = julian_day(1992, 10, 13, 0.0);
         let julian_century = julian_century(julian_day);
         let mean_solar_anomaly = mean_solar_anomaly(julian_century);
-        let solar_equation_of_center =
-            solar_equation_of_the_center(julian_century, mean_solar_anomaly);
+        let solar_equation_of_center = solar_equation_of_the_center(julian_century, mean_solar_anomaly);
 
-        assert_eq!(solar_equation_of_center.degrees, -1.897323843371985);
+        assert_eq!(solar_equation_of_center.degrees, -1.897_323_843_371_985);
     }
 
     #[test]
@@ -537,7 +487,7 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_lunar_longitude = mean_lunar_longitude(julian_century);
 
-        assert_eq!(mean_lunar_longitude.degrees, 38.747190008209145);
+        assert_eq!(mean_lunar_longitude.degrees, 38.747_190_008_209_145);
     }
 
     #[test]
@@ -546,7 +496,7 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let ascending_lunar_node = ascending_lunar_node_longitude(julian_century);
 
-        assert_eq!(ascending_lunar_node.degrees, 264.657131805429);
+        assert_eq!(ascending_lunar_node.degrees, 264.657_131_805_429);
     }
 
     #[test]
@@ -555,7 +505,7 @@ mod tests {
         let julian_century = julian_century(julian_day);
         let mean_sidereal_time = mean_sidereal_time(julian_century);
 
-        assert_eq!(mean_sidereal_time.degrees, 21.801339167752303);
+        assert_eq!(mean_sidereal_time.degrees, 21.801_339_167_752_303);
     }
 
     #[test]
@@ -565,13 +515,10 @@ mod tests {
         let mean_solar_longitude = mean_solar_longitude(julian_century);
         let mean_lunar_longitude = mean_lunar_longitude(julian_century);
         let ascending_lunar_node = ascending_lunar_node_longitude(julian_century);
-        let nutation_longitude = nutation_in_longitude(
-            mean_solar_longitude,
-            mean_lunar_longitude,
-            ascending_lunar_node,
-        );
+        let nutation_longitude =
+            nutation_in_longitude(mean_solar_longitude, mean_lunar_longitude, ascending_lunar_node);
 
-        assert_eq!(nutation_longitude, 0.0044525358169686564);
+        assert_eq!(nutation_longitude, 0.004_452_535_816_968_656_4);
     }
 
     #[test]
@@ -581,26 +528,19 @@ mod tests {
         let mean_solar_longitude = mean_solar_longitude(julian_century);
         let mean_lunar_longitude = mean_lunar_longitude(julian_century);
         let ascending_lunar_node = ascending_lunar_node_longitude(julian_century);
-        let nutation_obliq = nutation_in_obliquity(
-            mean_solar_longitude,
-            mean_lunar_longitude,
-            ascending_lunar_node,
-        );
+        let nutation_obliq = nutation_in_obliquity(mean_solar_longitude, mean_lunar_longitude, ascending_lunar_node);
 
-        assert_eq!(nutation_obliq, -0.000092747500292341556);
+        assert_eq!(nutation_obliq, -0.000_092_747_500_292_341_56);
     }
 
     #[test]
     fn calculate_altitude_of_celestial_body() {
-        let coordinates = Coordinates::new(35.783333333333331, -78.650000000000006);
-        let declination_angle = Angle::new(21.894701414701338);
-        let local_hour_angle = Angle::new(108.09275357838322);
-        let celestial_body = altitude_of_celestial_body(
-            coordinates.latitude_angle(),
-            declination_angle,
-            local_hour_angle,
-        );
+        let coordinates = Coordinates::new(35.783_333_333_333_33, -78.65);
+        let declination_angle = Angle::new(21.894_701_414_701_338);
+        let local_hour_angle = Angle::new(108.092_753_578_383_22);
+        let celestial_body =
+            altitude_of_celestial_body(coordinates.latitude_angle(), declination_angle, local_hour_angle);
 
-        assert_eq!(celestial_body.degrees, -0.90061562155943208);
+        assert_eq!(celestial_body.degrees, -0.900_615_621_559_432_1);
     }
 }

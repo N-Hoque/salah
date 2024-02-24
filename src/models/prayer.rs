@@ -21,6 +21,7 @@ pub enum Prayer {
 }
 
 impl Prayer {
+    #[must_use]
     pub fn name(&self) -> String {
         match self {
             Prayer::Fajr | Prayer::FajrTomorrow => String::from("Fajr"),
