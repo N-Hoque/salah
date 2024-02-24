@@ -20,6 +20,21 @@ pub enum Prayer {
     FajrTomorrow,
 }
 
+impl std::fmt::Display for Prayer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Fajr => write!(f, "Fajr"),
+            Self::Sunrise => write!(f, "Sunrise"),
+            Self::Dhuhr => write!(f, "Dhuhr"),
+            Self::Asr => write!(f, "Asr"),
+            Self::Maghrib => write!(f, "Maghrib"),
+            Self::Isha => write!(f, "Isha"),
+            Self::Qiyam => write!(f, "Qiyam"),
+            Self::FajrTomorrow => write!(f, "FajrTomorrow"),
+        }
+    }
+}
+
 impl Prayer {
     #[must_use]
     pub fn name(&self) -> &'static str {
