@@ -4,7 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Duration, TimeZone, Utc};
 
 use crate::{
     astronomy::unit::{Angle, Coordinates, Normalize, Stride},
@@ -278,12 +278,18 @@ pub const fn is_leap_year(year: u32) -> bool {
 
 // Twilight adjustment based on observational data for use
 // in the Moonsighting Committee calculation method.
-pub fn season_adjusted_morning_twilight(latitude: f64, day: u32, year: u32, sunrise: DateTime<Utc>) -> DateTime<Utc> {
+pub fn season_adjusted_morning_twilight<Tz: TimeZone>(
+    latitude: f64,
+    day: u32,
+    year: u32,
+    sunrise: &DateTime<Tz>,
+) -> DateTime<Utc> {
     let dyy = f64::from(days_since_solstice(day, year, latitude));
     let adjustment = twilight_adjustments(AdjustmentDaytime::Morning, latitude, dyy, Shafaq::General);
 
     let rounded_adjustment = (adjustment * -60.0).round() as i64;
     sunrise
+        .to_utc()
         .checked_add_signed(Duration::seconds(rounded_adjustment))
         .unwrap()
 }
@@ -354,11 +360,11 @@ fn twilight_adjustment_values(daytime: AdjustmentDaytime, latitude: f64, shafaq:
 
 // Twilight adjustment based on observational data for use
 // in the Moonsighting Committee calculation method.
-pub fn season_adjusted_evening_twilight(
+pub fn season_adjusted_evening_twilight<Tz: TimeZone>(
     latitude: f64,
     day: u32,
     year: u32,
-    sunset: DateTime<Utc>,
+    sunset: &DateTime<Tz>,
     shafaq: Shafaq,
 ) -> DateTime<Utc> {
     let dyy = f64::from(days_since_solstice(day, year, latitude));
@@ -366,6 +372,7 @@ pub fn season_adjusted_evening_twilight(
 
     let rounded_adjustment = (adjustment * 60.0).round() as i64;
     let adjusted_date = sunset
+        .to_utc()
         .checked_add_signed(Duration::seconds(rounded_adjustment))
         .unwrap();
 
@@ -392,8 +399,10 @@ pub fn days_since_solstice(day_of_year: u32, year: u32, latitude: f64) -> u32 {
     }
 }
 
-pub fn adjust_time(date: &DateTime<Utc>, minutes: i64) -> DateTime<Utc> {
-    date.checked_add_signed(Duration::seconds(minutes * 60)).unwrap()
+pub fn adjust_time<Tz: TimeZone>(date: &DateTime<Tz>, minutes: i64) -> DateTime<Utc> {
+    date.to_utc()
+        .checked_add_signed(Duration::seconds(minutes * 60))
+        .unwrap()
 }
 
 #[cfg(test)]

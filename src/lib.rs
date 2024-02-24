@@ -78,7 +78,7 @@ mod tests {
         let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
-        let schedule = PrayerTimes::new(local_date, coordinates, &params);
+        let schedule = PrayerTimes::new(&local_date, coordinates, &params);
 
         assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "8:42 AM");
         assert_eq!(
@@ -100,7 +100,7 @@ mod tests {
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
-            .on(date)
+            .on(&date)
             .for_location(coordinates)
             .with_parameters(params)
             .calculate();
@@ -129,7 +129,7 @@ mod tests {
     fn calculate_times_using_the_builder_failure() {
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let result = PrayerSchedule::new().on(date).with_parameters(params).calculate();
+        let result = PrayerSchedule::new().on(&date).with_parameters(params).calculate();
 
         assert!(result.is_err(), "We were expecting an error, but received data.");
     }
@@ -140,7 +140,7 @@ mod tests {
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
-            .on(date)
+            .on(&date)
             .for_location(coordinates)
             .with_parameters(params)
             .calculate();
@@ -168,7 +168,7 @@ mod tests {
         params.high_latitude_rule = HighLatitudeRule::MiddleOfTheNight;
 
         let result = PrayerSchedule::new()
-            .on(Utc.with_ymd_and_hms(2021, 1, 13, 0, 0, 0).unwrap())
+            .on(&Utc.with_ymd_and_hms(2021, 1, 13, 0, 0, 0).unwrap())
             .for_location(Coordinates::new(1.370_844_612_058_886, 103.801_456_440_605_52))
             .with_parameters(params)
             .calculate();
@@ -210,7 +210,7 @@ mod tests {
         params.method_adjustments = TimeAdjustment::new(-10, -2, 2, 1, 2, 4);
 
         let result = PrayerSchedule::new()
-            .on(Utc.with_ymd_and_hms(2021, 1, 12, 0, 0, 0).unwrap())
+            .on(&Utc.with_ymd_and_hms(2021, 1, 12, 0, 0, 0).unwrap())
             .for_location(Coordinates::new(-6.182_339_95, 106.842_871_54))
             .with_parameters(params)
             .calculate();
