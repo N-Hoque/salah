@@ -216,57 +216,103 @@ mod tests {
     use std::f64::consts::PI;
 
     use chrono::Utc;
+    use float_cmp::assert_approx_eq;
 
     use super::*;
 
     #[test]
     fn angle_conversion_from_radians() {
-        assert_eq!(Angle::from_radians(PI).degrees, 180.0);
-        assert_eq!(Angle::from_radians(PI / 2.0).degrees, 90.0);
+        assert_approx_eq!(f64, Angle::from_radians(PI).degrees, 180.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, Angle::from_radians(PI / 2.0).degrees, 90.0, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn angle_conversion_degrees_to_radians() {
-        assert_eq!(Angle::new(180.0).radians(), PI);
-        assert_eq!(Angle::new(90.0).radians(), PI / 2.0);
+        assert_approx_eq!(f64, Angle::new(180.0).radians(), PI, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, Angle::new(90.0).radians(), PI / 2.0, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn normalize_value() {
-        assert_eq!(2.0_f64.normalized_to_scale(-5.0), -3.0);
-        assert_eq!((-4.0_f64).normalized_to_scale(-5.0), -4.0);
-        assert_eq!((-6.0_f64).normalized_to_scale(-5.0), -1.0);
+        assert_approx_eq!(f64, 2.0_f64.normalized_to_scale(-5.0), -3.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, (-4.0_f64).normalized_to_scale(-5.0), -4.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, (-6.0_f64).normalized_to_scale(-5.0), -1.0, epsilon = 0.000_000_1);
 
-        assert_eq!((-1.0_f64).normalized_to_scale(24.0), 23.0);
-        assert_eq!(1.0_f64.normalized_to_scale(24.0), 1.0);
-        assert_eq!(49.0_f64.normalized_to_scale(24.0), 1.0);
+        assert_approx_eq!(f64, (-1.0_f64).normalized_to_scale(24.0), 23.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, 1.0_f64.normalized_to_scale(24.0), 1.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, 49.0_f64.normalized_to_scale(24.0), 1.0, epsilon = 0.000_000_1);
 
-        assert_eq!(361.0_f64.normalized_to_scale(360.0), 1.0);
-        assert_eq!(360.0_f64.normalized_to_scale(360.0), 0.0);
-        assert_eq!(259.0_f64.normalized_to_scale(360.0), 259.0);
-        assert_eq!(2592.0_f64.normalized_to_scale(360.0), 72.0);
+        assert_approx_eq!(f64, 361.0_f64.normalized_to_scale(360.0), 1.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, 360.0_f64.normalized_to_scale(360.0), 0.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, 259.0_f64.normalized_to_scale(360.0), 259.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, 2592.0_f64.normalized_to_scale(360.0), 72.0, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn angle_unwound() {
-        assert_eq!(Angle::new(-45.0).unwound().degrees, 315.0);
-        assert_eq!(Angle::new(361.0).unwound().degrees, 1.0);
-        assert_eq!(Angle::new(360.0).unwound().degrees, 0.0);
-        assert_eq!(Angle::new(259.0).unwound().degrees, 259.0);
-        assert_eq!(Angle::new(2592.0).unwound().degrees, 72.0);
+        assert_approx_eq!(f64, Angle::new(-45.0).unwound().degrees, 315.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, Angle::new(361.0).unwound().degrees, 1.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, Angle::new(360.0).unwound().degrees, 0.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, Angle::new(259.0).unwound().degrees, 259.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, Angle::new(2592.0).unwound().degrees, 72.0, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn closest_angle() {
-        assert_eq!(Angle::new(360.0).quadrant_shifted().degrees, 0.0);
-        assert_eq!(Angle::new(361.0).quadrant_shifted().degrees, 1.0);
-        assert_eq!(Angle::new(1.0).quadrant_shifted().degrees, 1.0);
-        assert_eq!(Angle::new(-1.0).quadrant_shifted().degrees, -1.0);
-        assert_eq!(Angle::new(-181.0).quadrant_shifted().degrees, 179.0);
-        assert_eq!(Angle::new(180.0).quadrant_shifted().degrees, 180.0);
-        assert_eq!(Angle::new(359.0).quadrant_shifted().degrees, -1.0);
-        assert_eq!(Angle::new(-359.0).quadrant_shifted().degrees, 1.0);
-        assert_eq!(Angle::new(1261.0).quadrant_shifted().degrees, -179.0);
+        assert_approx_eq!(
+            f64,
+            Angle::new(360.0).quadrant_shifted().degrees,
+            0.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(361.0).quadrant_shifted().degrees,
+            1.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(1.0).quadrant_shifted().degrees,
+            1.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(-1.0).quadrant_shifted().degrees,
+            -1.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(-181.0).quadrant_shifted().degrees,
+            179.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(180.0).quadrant_shifted().degrees,
+            180.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(359.0).quadrant_shifted().degrees,
+            -1.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(-359.0).quadrant_shifted().degrees,
+            1.0,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            Angle::new(1261.0).quadrant_shifted().degrees,
+            -179.0,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -274,7 +320,7 @@ mod tests {
         let angle_a = Angle::new(45.0);
         let angle_b = Angle::new(45.0);
 
-        assert_eq!((angle_a + angle_b).degrees, 90.0);
+        assert_approx_eq!(f64, (angle_a + angle_b).degrees, 90.0, epsilon = 0.000_000_1);
     }
 
     #[test]
