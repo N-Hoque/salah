@@ -4,13 +4,10 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use super::adjustments::TimeAdjustment;
-use super::high_altitude_rule::HighLatitudeRule;
-use super::madhab::Madhab;
-use super::method::Method;
-use super::prayer::Prayer;
-use super::rounding::Rounding;
-use super::shafaq::Shafaq;
+use super::{
+    adjustments::TimeAdjustment, high_altitude_rule::HighLatitudeRule, madhab::Madhab, method::Method, prayer::Prayer,
+    rounding::Rounding, shafaq::Shafaq,
+};
 
 /// Settings that are used for determining the
 /// the correct prayer time.
@@ -33,11 +30,12 @@ pub struct Parameters {
 }
 
 impl Parameters {
+    #[must_use]
     pub fn new(fajr_angle: f64, isha_angle: f64) -> Parameters {
         Parameters {
-            fajr_angle: fajr_angle,
+            fajr_angle,
             maghrib_angle: 0.0,
-            isha_angle: isha_angle,
+            isha_angle,
             method: Method::Other,
             isha_interval: 0,
             madhab: Madhab::Shafi,
@@ -49,6 +47,7 @@ impl Parameters {
         }
     }
 
+    #[must_use]
     pub fn night_portions(&self) -> (f64, f64) {
         match self.high_latitude_rule {
             HighLatitudeRule::MiddleOfTheNight => (1.0 / 2.0, 1.0 / 2.0),
@@ -57,6 +56,7 @@ impl Parameters {
         }
     }
 
+    #[must_use]
     pub fn time_adjustments(&self, prayer: Prayer) -> i64 {
         match prayer {
             Prayer::Fajr => self.adjustments.fajr + self.method_adjustments.fajr,
@@ -89,11 +89,12 @@ pub struct Configuration {
 }
 
 impl Configuration {
+    #[must_use]
     pub fn new(fajr_angle: f64, isha_angle: f64) -> Configuration {
         Configuration {
-            fajr_angle: fajr_angle,
+            fajr_angle,
             maghrib_angle: 0.0,
-            isha_angle: isha_angle,
+            isha_angle,
             method: Method::Other,
             isha_interval: 0,
             madhab: Madhab::Shafi,
@@ -105,6 +106,7 @@ impl Configuration {
         }
     }
 
+    #[must_use]
     pub fn with(method: Method, madhab: Madhab) -> Parameters {
         let mut params = method.parameters();
         params.madhab = madhab;
@@ -112,53 +114,48 @@ impl Configuration {
         params
     }
 
-    pub fn method<'a>(&'a mut self, method: Method) -> &'a mut Configuration {
+    pub fn method(&mut self, method: Method) -> &mut Configuration {
         self.method = method;
         self
     }
 
-    pub fn method_adjustments<'a>(
-        &'a mut self,
-        method_adjustments: TimeAdjustment,
-    ) -> &'a mut Configuration {
+    pub fn method_adjustments(&mut self, method_adjustments: TimeAdjustment) -> &mut Configuration {
         self.method_adjustments = method_adjustments;
         self
     }
 
-    pub fn high_latitude_rule<'a>(
-        &'a mut self,
-        high_latitude_rule: HighLatitudeRule,
-    ) -> &'a mut Configuration {
+    pub fn high_latitude_rule(&mut self, high_latitude_rule: HighLatitudeRule) -> &mut Configuration {
         self.high_latitude_rule = high_latitude_rule;
         self
     }
 
-    pub fn madhab<'a>(&'a mut self, madhab: Madhab) -> &'a mut Configuration {
+    pub fn madhab(&mut self, madhab: Madhab) -> &mut Configuration {
         self.madhab = madhab;
         self
     }
 
-    pub fn isha_interval<'a>(&'a mut self, isha_interval: i32) -> &'a mut Configuration {
+    pub fn isha_interval(&mut self, isha_interval: i32) -> &mut Configuration {
         self.isha_angle = 0.0;
         self.isha_interval = isha_interval;
         self
     }
 
-    pub fn maghrib_angle<'a>(&'a mut self, angle: f64) -> &'a mut Configuration {
+    pub fn maghrib_angle(&mut self, angle: f64) -> &mut Configuration {
         self.maghrib_angle = angle;
         self
     }
 
-    pub fn rounding<'a>(&'a mut self, value: Rounding) -> &'a mut Configuration {
+    pub fn rounding(&mut self, value: Rounding) -> &mut Configuration {
         self.rounding = value;
         self
     }
 
-    pub fn shafaq<'a>(&'a mut self, value: Shafaq) -> &'a mut Configuration {
+    pub fn shafaq(&mut self, value: Shafaq) -> &mut Configuration {
         self.shafaq = value;
         self
     }
 
+    #[must_use]
     pub fn done(&self) -> Parameters {
         Parameters {
             fajr_angle: self.fajr_angle,

@@ -4,12 +4,14 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use std::f64::consts::PI;
-use std::ops::{Add, Div, Mul, Sub};
+use std::{
+    f64::consts::PI,
+    ops::{Add, Div, Mul, Sub},
+};
 
-use crate::astronomy::ops;
-use crate::models::rounding::Rounding;
 use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike};
+
+use crate::{astronomy::ops, models::rounding::Rounding};
 
 pub trait Normalize {
     fn normalized_to_scale(&self, max: f64) -> f64;
@@ -21,14 +23,14 @@ impl Normalize for f64 {
     }
 }
 
-/// Convenience methods for the DateTime type.
+/// Convenience methods for the `DateTime` type.
 pub trait Stride {
     fn tomorrow(&self) -> Self;
     fn yesterday(&self) -> Self;
     fn julian_day(&self) -> f64;
     fn adjust_time(&self, minutes: i64) -> Self;
     fn next_date(&self, fwd: bool) -> Self;
-	fn rounded_minute(&self, rounding: Rounding) -> Self;
+    fn rounded_minute(&self, rounding: Rounding) -> Self;
 }
 
 impl<Tz: TimeZone> Stride for DateTime<Tz> {
@@ -44,60 +46,46 @@ impl<Tz: TimeZone> Stride for DateTime<Tz> {
 
     /// Returns the Julian day.
     fn julian_day(&self) -> f64 {
-        ops::julian_day(
-            self.year() as i32,
-            self.month() as i32,
-            self.day() as i32,
-            0.0,
-        )
+        ops::julian_day(self.year(), self.month() as i32, self.day() as i32, 0.0)
     }
 
-	fn rounded_minute(&self, rounding: Rounding) -> Self {
-		let adjusted = self.clone();
-		let seconds = adjusted.second();
-		
-		match rounding {
-			Rounding::Nearest => {
-				let rounded = ((seconds as f64)/60.0).round() as i64;
-				let adjusted_seconds = seconds as i64;
-				
-				if rounded == 1 {
-					adjusted + Duration::seconds(60 - adjusted_seconds)
-				} else {
-					adjusted + Duration::seconds(adjusted_seconds * -1)
-				}
-			},
-			Rounding::Up => {
-				let adjusted_seconds = seconds as i64;
-				
-				adjusted + Duration::seconds(60 - adjusted_seconds)
-			},
-			Rounding::None => adjusted,
-		}
-	}
+    fn rounded_minute(&self, rounding: Rounding) -> Self {
+        let adjusted = self.clone();
+        let seconds = adjusted.second();
+
+        match rounding {
+            Rounding::Nearest => {
+                let rounded = (f64::from(seconds) / 60.0).round() as i64;
+                let adjusted_seconds = i64::from(seconds);
+
+                if rounded == 1 {
+                    adjusted + Duration::seconds(60 - adjusted_seconds)
+                } else {
+                    adjusted + Duration::seconds(-adjusted_seconds)
+                }
+            }
+            Rounding::Up => {
+                let adjusted_seconds = i64::from(seconds);
+
+                adjusted + Duration::seconds(60 - adjusted_seconds)
+            }
+            Rounding::None => adjusted,
+        }
+    }
 
     fn adjust_time(&self, minutes: i64) -> Self {
         let some_date = self.clone();
-        some_date
-            .checked_add_signed(Duration::seconds(minutes * 60))
-            .unwrap()
+        some_date.checked_add_signed(Duration::seconds(minutes * 60)).unwrap()
     }
 
     fn next_date(&self, fwd: bool) -> Self {
-        let ordinal = if fwd {
-            self.ordinal() + 1
-        } else {
-            self.ordinal() - 1
-        };
+        let ordinal = if fwd { self.ordinal() + 1 } else { self.ordinal() - 1 };
 
         match self.with_ordinal(ordinal) {
             Some(dt) => dt,
             None => {
                 if fwd {
-                    self.with_year(self.year() + 1)
-                        .unwrap()
-                        .with_ordinal(1)
-                        .unwrap()
+                    self.with_year(self.year() + 1).unwrap().with_ordinal(1).unwrap()
                 } else {
                     self.with_year(self.year() - 1)
                         .unwrap()
@@ -143,7 +131,7 @@ impl Angle {
         if self.degrees >= -180.0 && self.degrees <= 180.0 {
             // Nothing to do. Already initialized
             // to the default value.
-            angle = self.clone();
+            angle = *self;
         } else {
             let value = self.degrees - (360.0 * (self.degrees / 360.0).round());
             angle = Angle { degrees: value };
@@ -187,9 +175,7 @@ impl Div for Angle {
     type Output = Angle;
 
     fn div(self, rhs: Angle) -> Angle {
-        if rhs.degrees == 0.0 {
-            panic!("Cannot divide by zero.");
-        }
+        assert!(!(rhs.degrees == 0.0), "Cannot divide by zero.");
 
         Angle {
             degrees: self.degrees / rhs.degrees,
@@ -206,19 +192,19 @@ pub struct Coordinates {
 }
 
 impl Coordinates {
+    #[must_use]
     pub fn new(latitude: f64, longitude: f64) -> Self {
-        Coordinates {
-            latitude: latitude,
-            longitude: longitude,
-        }
+        Coordinates { latitude, longitude }
     }
 }
 
 impl Coordinates {
+    #[must_use]
     pub fn latitude_angle(&self) -> Angle {
         Angle::new(self.latitude)
     }
 
+    #[must_use]
     pub fn longitude_angle(&self) -> Angle {
         Angle::new(self.longitude)
     }
@@ -226,9 +212,11 @@ impl Coordinates {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use chrono::Utc;
     use std::f64::consts::PI;
+
+    use chrono::Utc;
+
+    use super::*;
 
     #[test]
     fn angle_conversion_from_radians() {
@@ -287,26 +275,34 @@ mod tests {
 
         assert_eq!((angle_a + angle_b).degrees, 90.0);
     }
-	
-	#[test]
-	fn calculate_rounding_nearest() {
+
+    #[test]
+    fn calculate_rounding_nearest() {
         let time_1 = Utc.ymd(2015, 7, 13).and_hms(4, 37, 30);
-        
-		assert_eq!(time_1.rounded_minute(Rounding::Nearest), Utc.ymd(2015, 7, 13).and_hms(4, 38, 00));
-	}
-	
-	#[test]
-	fn calculate_rounding_up() {
-		let time_1 = Utc.ymd(2015, 07, 13).and_hms(05, 59, 20);
-		
-		assert_eq!(time_1.rounded_minute(Rounding::Up), Utc.ymd(2015, 7, 13).and_hms(6, 00, 00));
-	}
-	
-	#[test]
-	fn calculate_rounding_none() {
-		let time_1 = Utc.ymd(2015, 07, 13).and_hms(05, 59, 20);
-		
-		assert_eq!(time_1.rounded_minute(Rounding::None), Utc.ymd(2015, 7, 13).and_hms(5, 59, 20));
-	}
-	
+
+        assert_eq!(
+            time_1.rounded_minute(Rounding::Nearest),
+            Utc.ymd(2015, 7, 13).and_hms(4, 38, 00)
+        );
+    }
+
+    #[test]
+    fn calculate_rounding_up() {
+        let time_1 = Utc.ymd(2015, 07, 13).and_hms(05, 59, 20);
+
+        assert_eq!(
+            time_1.rounded_minute(Rounding::Up),
+            Utc.ymd(2015, 7, 13).and_hms(6, 00, 00)
+        );
+    }
+
+    #[test]
+    fn calculate_rounding_none() {
+        let time_1 = Utc.ymd(2015, 07, 13).and_hms(05, 59, 20);
+
+        assert_eq!(
+            time_1.rounded_minute(Rounding::None),
+            Utc.ymd(2015, 7, 13).and_hms(5, 59, 20)
+        );
+    }
 }

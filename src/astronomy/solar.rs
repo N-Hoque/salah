@@ -6,9 +6,10 @@
 
 use chrono::{DateTime, Datelike, TimeZone, Utc};
 
-use crate::astronomy::ops;
-use crate::astronomy::unit::Stride;
-use crate::astronomy::unit::{Angle, Coordinates};
+use crate::astronomy::{
+    ops,
+    unit::{Angle, Coordinates, Stride},
+};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct SolarCoordinates {
@@ -30,34 +31,24 @@ impl SolarCoordinates {
         let mean_solar_longitude = ops::mean_solar_longitude(julian_century);
         let mean_lunar_longitude = ops::mean_lunar_longitude(julian_century);
         let ascending_lunar_node = ops::ascending_lunar_node_longitude(julian_century);
-        let apparent_solar_longitude =
-            ops::apparent_solar_longitude(julian_century, mean_solar_longitude).radians();
+        let apparent_solar_longitude = ops::apparent_solar_longitude(julian_century, mean_solar_longitude).radians();
 
         let mean_sidereal_time = ops::mean_sidereal_time(julian_century);
-        let nutation_longitude = ops::nutation_in_longitude(
-            mean_solar_longitude,
-            mean_lunar_longitude,
-            ascending_lunar_node,
-        );
-        let nutation_obliq = ops::nutation_in_obliquity(
-            mean_solar_longitude,
-            mean_lunar_longitude,
-            ascending_lunar_node,
-        );
+        let nutation_longitude =
+            ops::nutation_in_longitude(mean_solar_longitude, mean_lunar_longitude, ascending_lunar_node);
+        let nutation_obliq =
+            ops::nutation_in_obliquity(mean_solar_longitude, mean_lunar_longitude, ascending_lunar_node);
 
         let mean_obliq_ecliptic = ops::mean_obliquity_of_the_ecliptic(julian_century);
         let apparent_obliq_ecliptic =
             ops::apparent_obliquity_of_the_ecliptic(julian_century, mean_obliq_ecliptic).radians();
 
         // Equation from Astronomical Algorithms page 165
-        let declination = Angle::from_radians(
-            (apparent_obliq_ecliptic.sin() * apparent_solar_longitude.sin()).asin(),
-        );
+        let declination = Angle::from_radians((apparent_obliq_ecliptic.sin() * apparent_solar_longitude.sin()).asin());
 
         // Equation from Astronomical Algorithms page 165
         let right_ascension = Angle::from_radians(
-            (apparent_obliq_ecliptic.cos() * apparent_solar_longitude.sin())
-                .atan2(apparent_solar_longitude.cos()),
+            (apparent_obliq_ecliptic.cos() * apparent_solar_longitude.sin()).atan2(apparent_solar_longitude.cos()),
         )
         .unwound();
 
@@ -65,16 +56,14 @@ impl SolarCoordinates {
         let apparent_sidereal_time = Angle::new(
             mean_sidereal_time.degrees
                 + ((nutation_longitude * 3600.0)
-                    * Angle::new(mean_obliq_ecliptic.degrees + nutation_obliq)
-                        .radians()
-                        .cos())
+                    * Angle::new(mean_obliq_ecliptic.degrees + nutation_obliq).radians().cos())
                     / 3600.0,
         );
 
         SolarCoordinates {
-            declination: declination,
-            right_ascension: right_ascension,
-            apparent_sidereal_time: apparent_sidereal_time,
+            declination,
+            right_ascension,
+            apparent_sidereal_time,
         }
     }
 }
@@ -96,9 +85,7 @@ pub struct SolarTime {
 impl SolarTime {
     pub fn new(date: DateTime<Utc>, coordinates: Coordinates) -> SolarTime {
         // All calculation need to occur at 0h0m UTC
-        let today = Utc
-            .ymd(date.year(), date.month(), date.day())
-            .and_hms(0, 0, 0);
+        let today = Utc.ymd(date.year(), date.month(), date.day()).and_hms(0, 0, 0);
         let tomorrow = today.tomorrow();
         let yesterday = today.yesterday();
         let prev_solar = SolarCoordinates::new(yesterday.julian_day());
@@ -146,15 +133,15 @@ impl SolarTime {
         );
 
         SolarTime {
-            date: date,
+            date,
             observer: coordinates,
-            solar: solar,
+            solar,
             transit: SolarTime::setting_hour(transit_time, &date).unwrap(),
             sunrise: SolarTime::setting_hour(sunrise_time, &date).unwrap(),
             sunset: SolarTime::setting_hour(sunset_time, &date).unwrap(),
-            prev_solar: prev_solar,
-            next_solar: next_solar,
-            approx_transit: approx_transit,
+            prev_solar,
+            next_solar,
+            approx_transit,
         }
     }
 
@@ -191,22 +178,16 @@ impl SolarTime {
         if value.is_normal() {
             let calculated_hours = value.floor();
             let calculated_minutes = ((value - calculated_hours) * 60.0).floor();
-            let calculated_seconds =
-                ((value - (calculated_hours + calculated_minutes / 60.0)) * 60.0 * 60.0).floor();
+            let calculated_seconds = ((value - (calculated_hours + calculated_minutes / 60.0)) * 60.0 * 60.0).floor();
 
-            let (adjusted_hour, adjusted_date) =
-                SolarTime::hour_adjustment(calculated_hours, &date);
+            let (adjusted_hour, adjusted_date) = SolarTime::hour_adjustment(calculated_hours, date);
 
             // Round to the nearest minute
             let adjusted_mins = (calculated_minutes + calculated_seconds / 60.0).round() as u32;
             let adjusted_secs: u32 = 0;
 
             let adjusted = Utc
-                .ymd(
-                    adjusted_date.year(),
-                    adjusted_date.month(),
-                    adjusted_date.day(),
-                )
+                .ymd(adjusted_date.year(), adjusted_date.month(), adjusted_date.day())
                 .and_hms(adjusted_hour, adjusted_mins, adjusted_secs);
 
             adjusted_time = Some(adjusted);
@@ -226,25 +207,26 @@ impl SolarTime {
         } else if calculated_hours >= 24.0 {
             ((calculated_hours - 24.0) as u32, date.tomorrow())
         } else {
-            (calculated_hours as u32, date.clone())
+            (calculated_hours as u32, *date)
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use chrono::{Datelike, Local, TimeZone, Utc};
+
     use super::*;
     use crate::astronomy::ops;
-    use chrono::{Datelike, Local, TimeZone, Utc};
 
     #[test]
     fn solar_coordinates() {
         let julian_day = ops::julian_day(1992, 10, 13, 0.0);
         let solar = SolarCoordinates::new(julian_day);
 
-        assert_eq!(solar.declination.degrees, -7.7850685152648795);
-        assert_eq!(solar.right_ascension.degrees, 198.38082214251881);
-        assert_eq!(solar.right_ascension.unwound().degrees, 198.38082214251881);
+        assert_eq!(solar.declination.degrees, -7.785_068_515_264_879_5);
+        assert_eq!(solar.right_ascension.degrees, 198.380_822_142_518_8);
+        assert_eq!(solar.right_ascension.unwound().degrees, 198.380_822_142_518_8);
     }
 
     #[test]
@@ -308,9 +290,7 @@ mod tests {
     fn calculate_corrected_hour_angle() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
         let date = Utc.ymd(2015, 7, 12).and_hms(0, 0, 0);
-        let today = Utc
-            .ymd(date.year(), date.month(), date.day())
-            .and_hms(0, 0, 0);
+        let today = Utc.ymd(date.year(), date.month(), date.day()).and_hms(0, 0, 0);
         let tomorrow = today.tomorrow();
         let yesterday = today.yesterday();
         let prev_solar = SolarCoordinates::new(yesterday.julian_day());
@@ -336,6 +316,6 @@ mod tests {
             next_solar.declination,
         );
 
-        assert_eq!(sunrise_time, 10.131800480632849);
+        assert_eq!(sunrise_time, 10.131_800_480_632_85);
     }
 }
