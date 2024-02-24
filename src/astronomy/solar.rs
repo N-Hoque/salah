@@ -132,13 +132,13 @@ impl SolarTime {
             next_solar.declination,
         );
 
-        SolarTime {
+        Self {
             date,
             observer: coordinates,
             solar,
-            transit: SolarTime::setting_hour(transit_time, &date).unwrap(),
-            sunrise: SolarTime::setting_hour(sunrise_time, &date).unwrap(),
-            sunset: SolarTime::setting_hour(sunset_time, &date).unwrap(),
+            transit: Self::setting_hour(transit_time, &date).unwrap(),
+            sunrise: Self::setting_hour(sunrise_time, &date).unwrap(),
+            sunset: Self::setting_hour(sunset_time, &date).unwrap(),
             prev_solar,
             next_solar,
             approx_transit,
@@ -173,8 +173,6 @@ impl SolarTime {
     }
 
     fn setting_hour(value: f64, date: &DateTime<Utc>) -> Option<DateTime<Utc>> {
-        let mut adjusted_time: Option<DateTime<Utc>> = None;
-
         if value.is_normal() {
             let calculated_hours = value.floor();
             let calculated_minutes = ((value - calculated_hours) * 60.0).floor();
@@ -190,12 +188,11 @@ impl SolarTime {
                 .ymd(adjusted_date.year(), adjusted_date.month(), adjusted_date.day())
                 .and_hms(adjusted_hour, adjusted_mins, adjusted_secs);
 
-            adjusted_time = Some(adjusted);
+            Some(adjusted)
         } else {
             // Nothing to do.
+            None
         }
-
-        adjusted_time
     }
 
     fn hour_adjustment(calculated_hours: f64, date: &DateTime<Utc>) -> (u32, DateTime<Utc>) {

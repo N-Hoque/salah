@@ -31,8 +31,8 @@ pub struct Parameters {
 
 impl Parameters {
     #[must_use]
-    pub fn new(fajr_angle: f64, isha_angle: f64) -> Parameters {
-        Parameters {
+    pub fn new(fajr_angle: f64, isha_angle: f64) -> Self {
+        Self {
             fajr_angle,
             maghrib_angle: 0.0,
             isha_angle,
@@ -57,7 +57,7 @@ impl Parameters {
     }
 
     #[must_use]
-    pub fn time_adjustments(&self, prayer: Prayer) -> i64 {
+    pub const fn time_adjustments(&self, prayer: Prayer) -> i64 {
         match prayer {
             Prayer::Fajr => self.adjustments.fajr + self.method_adjustments.fajr,
             Prayer::Sunrise => self.adjustments.sunrise + self.method_adjustments.sunrise,
@@ -90,8 +90,8 @@ pub struct Configuration {
 
 impl Configuration {
     #[must_use]
-    pub fn new(fajr_angle: f64, isha_angle: f64) -> Configuration {
-        Configuration {
+    pub fn new(fajr_angle: f64, isha_angle: f64) -> Self {
+        Self {
             fajr_angle,
             maghrib_angle: 0.0,
             isha_angle,
@@ -114,49 +114,49 @@ impl Configuration {
         params
     }
 
-    pub fn method(&mut self, method: Method) -> &mut Configuration {
+    pub fn method(&mut self, method: Method) -> &mut Self {
         self.method = method;
         self
     }
 
-    pub fn method_adjustments(&mut self, method_adjustments: TimeAdjustment) -> &mut Configuration {
+    pub fn method_adjustments(&mut self, method_adjustments: TimeAdjustment) -> &mut Self {
         self.method_adjustments = method_adjustments;
         self
     }
 
-    pub fn high_latitude_rule(&mut self, high_latitude_rule: HighLatitudeRule) -> &mut Configuration {
+    pub fn high_latitude_rule(&mut self, high_latitude_rule: HighLatitudeRule) -> &mut Self {
         self.high_latitude_rule = high_latitude_rule;
         self
     }
 
-    pub fn madhab(&mut self, madhab: Madhab) -> &mut Configuration {
+    pub fn madhab(&mut self, madhab: Madhab) -> &mut Self {
         self.madhab = madhab;
         self
     }
 
-    pub fn isha_interval(&mut self, isha_interval: i32) -> &mut Configuration {
+    pub fn isha_interval(&mut self, isha_interval: i32) -> &mut Self {
         self.isha_angle = 0.0;
         self.isha_interval = isha_interval;
         self
     }
 
-    pub fn maghrib_angle(&mut self, angle: f64) -> &mut Configuration {
+    pub fn maghrib_angle(&mut self, angle: f64) -> &mut Self {
         self.maghrib_angle = angle;
         self
     }
 
-    pub fn rounding(&mut self, value: Rounding) -> &mut Configuration {
+    pub fn rounding(&mut self, value: Rounding) -> &mut Self {
         self.rounding = value;
         self
     }
 
-    pub fn shafaq(&mut self, value: Shafaq) -> &mut Configuration {
+    pub fn shafaq(&mut self, value: Shafaq) -> &mut Self {
         self.shafaq = value;
         self
     }
 
     #[must_use]
-    pub fn done(&self) -> Parameters {
+    pub const fn done(&self) -> Parameters {
         Parameters {
             fajr_angle: self.fajr_angle,
             maghrib_angle: self.maghrib_angle,

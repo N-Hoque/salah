@@ -7,7 +7,7 @@
 use crate::astronomy::unit::Coordinates;
 
 /// Rule for approximating Fajr and Isha at high latitudes
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HighLatitudeRule {
     /// Fajr won't be earlier than the midpoint of the night and isha
     /// won't be later than the midpoint of the night. This is the default
@@ -29,11 +29,11 @@ pub enum HighLatitudeRule {
 }
 
 impl HighLatitudeRule {
-    pub fn recommended(coordinates: Coordinates) -> HighLatitudeRule {
+    pub fn recommended(coordinates: Coordinates) -> Self {
         if coordinates.latitude > 48.0 {
-            HighLatitudeRule::SeventhOfTheNight
+            Self::SeventhOfTheNight
         } else {
-            HighLatitudeRule::MiddleOfTheNight
+            Self::MiddleOfTheNight
         }
     }
 }

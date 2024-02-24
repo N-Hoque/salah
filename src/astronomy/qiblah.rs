@@ -26,11 +26,11 @@ impl Qiblah {
             * location_coordinates.latitude_angle().radians().sin();
         let term4 = term1.atan2(term2 - term3);
 
-        Qiblah(Angle::from_radians(term4).unwound().degrees)
+        Self(Angle::from_radians(term4).unwound().degrees)
     }
 
     #[must_use]
-    pub fn value(&self) -> f64 {
+    pub const fn value(&self) -> f64 {
         self.0
     }
 }

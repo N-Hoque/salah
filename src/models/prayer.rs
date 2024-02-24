@@ -8,7 +8,7 @@ use chrono::{Datelike, Utc, Weekday};
 
 /// Names of all obligatory prayers,
 /// sunrise, and Qiyam.
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Prayer {
     Fajr,
     Sunrise,
@@ -24,19 +24,19 @@ impl Prayer {
     #[must_use]
     pub fn name(&self) -> String {
         match self {
-            Prayer::Fajr | Prayer::FajrTomorrow => String::from("Fajr"),
-            Prayer::Sunrise => String::from("Sunrise"),
-            Prayer::Dhuhr => {
+            Self::Fajr | Self::FajrTomorrow => String::from("Fajr"),
+            Self::Sunrise => String::from("Sunrise"),
+            Self::Dhuhr => {
                 if Utc::now().weekday() == Weekday::Fri {
                     String::from("Jumua")
                 } else {
                     String::from("Dhuhr")
                 }
             }
-            Prayer::Asr => String::from("Asr"),
-            Prayer::Maghrib => String::from("Maghrib"),
-            Prayer::Isha => String::from("Isha"),
-            Prayer::Qiyam => String::from("Qiyam"),
+            Self::Asr => String::from("Asr"),
+            Self::Maghrib => String::from("Maghrib"),
+            Self::Isha => String::from("Isha"),
+            Self::Qiyam => String::from("Qiyam"),
         }
     }
 }

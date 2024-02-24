@@ -4,7 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Rounding {
     Nearest,
     Up,
