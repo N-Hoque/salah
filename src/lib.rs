@@ -29,7 +29,7 @@ mod astronomy;
 mod models;
 mod schedule;
 
-pub use chrono::{Date, DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
+pub use chrono::{DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
 
 pub use crate::{
     astronomy::unit::{Coordinates, Stride},
@@ -46,7 +46,7 @@ pub use crate::{
 /// A convenience module appropriate for glob imports (`use salah::prelude::*;`).
 pub mod prelude {
     #[doc(no_inline)]
-    pub use chrono::{Date, DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
+    pub use chrono::{DateTime, Datelike, Duration, Local, TimeZone, Timelike, Utc};
 
     #[doc(no_inline)]
     pub use crate::astronomy::qiblah::Qiblah;
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn calculate_prayer_times() {
-        let local_date = Utc.ymd(2015, 7, 12);
+        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Configuration::with(Method::NorthAmerica, Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let schedule = PrayerTimes::new(local_date, coordinates, params);
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn calculate_times_using_the_builder_successfully() {
-        let date = Utc.ymd(2015, 7, 12);
+        let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Configuration::with(Method::NorthAmerica, Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn calculate_times_using_the_builder_failure() {
-        let date = Utc.ymd(2015, 7, 12);
+        let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Configuration::with(Method::NorthAmerica, Madhab::Hanafi);
         let result = PrayerSchedule::new().on(date).with_configuration(params).calculate();
 
@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn calculate_qiyam_times() {
-        let date = Utc.ymd(2015, 7, 12);
+        let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Configuration::with(Method::NorthAmerica, Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
@@ -168,7 +168,7 @@ mod tests {
         params.high_latitude_rule = HighLatitudeRule::MiddleOfTheNight;
 
         let result = PrayerSchedule::new()
-            .on(Utc.ymd(2021, 1, 13))
+            .on(Utc.with_ymd_and_hms(2021, 1, 13, 0, 0, 0).unwrap())
             .for_location(Coordinates::new(1.370_844_612_058_886, 103.801_456_440_605_52))
             .with_configuration(params)
             .calculate();
@@ -176,7 +176,7 @@ mod tests {
         match result {
             Ok(schedule) => {
                 let hour = 3600;
-                let sgt_offset = FixedOffset::east(8 * hour);
+                let sgt_offset = FixedOffset::east_opt(8 * hour).unwrap();
                 let sgt_fajr = schedule.time(Prayer::Fajr).with_timezone(&sgt_offset);
                 let sgt_sunrise = schedule.time(Prayer::Sunrise).with_timezone(&sgt_offset);
                 let sgt_dhuhr = schedule.time(Prayer::Dhuhr).with_timezone(&sgt_offset);
@@ -217,7 +217,7 @@ mod tests {
             .done();
 
         let result = PrayerSchedule::new()
-            .on(Utc.ymd(2021, 1, 12))
+            .on(Utc.with_ymd_and_hms(2021, 1, 12, 0, 0, 0).unwrap())
             .for_location(Coordinates::new(-6.182_339_95, 106.842_871_54))
             .with_configuration(params)
             .calculate();
@@ -225,7 +225,7 @@ mod tests {
         match result {
             Ok(schedule) => {
                 let hour = 3600;
-                let wib_offset = FixedOffset::east(7 * hour);
+                let wib_offset = FixedOffset::east_opt(7 * hour).unwrap();
                 let wib_fajr = schedule.time(Prayer::Fajr).with_timezone(&wib_offset);
                 let wib_sunrise = schedule.time(Prayer::Sunrise).with_timezone(&wib_offset);
                 let wib_dhuhr = schedule.time(Prayer::Dhuhr).with_timezone(&wib_offset);
