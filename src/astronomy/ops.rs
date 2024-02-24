@@ -16,7 +16,7 @@ pub fn mean_solar_longitude(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 163
     let term1 = 280.466_456_7;
     let term2 = 36000.76983 * julian_century;
-    let term3 = 0.000_303_2 * julian_century.powf(2.0);
+    let term3 = 0.000_303_2 * julian_century.powi(2);
     let degrees = term1 + term2 + term3;
 
     Angle::new(degrees).unwound()
@@ -36,8 +36,8 @@ pub fn ascending_lunar_node_longitude(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 144
     let term1 = 125.04452;
     let term2 = 1_934.136_261 * julian_century;
-    let term3 = 0.002_070_8 * julian_century.powf(2.0);
-    let term4 = julian_century.powf(3.0) / 450_000.0;
+    let term3 = 0.002_070_8 * julian_century.powi(2);
+    let term4 = julian_century.powi(3) / 450_000.0;
     let degrees = term1 - term2 + term3 + term4;
 
     Angle::new(degrees).unwound()
@@ -48,7 +48,7 @@ pub fn mean_solar_anomaly(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 163
     let term1 = 357.52911;
     let term2 = 35999.05029 * julian_century;
-    let term3 = 0.000_153_7 * julian_century.powf(2.0);
+    let term3 = 0.000_153_7 * julian_century.powi(2);
     let degrees = term1 + term2 - term3;
 
     Angle::new(degrees).unwound()
@@ -58,8 +58,7 @@ pub fn mean_solar_anomaly(julian_century: f64) -> Angle {
 pub fn solar_equation_of_the_center(julian_century: f64, mean_anomaly: Angle) -> Angle {
     // Equation from Astronomical Algorithms page 164
     let mean_radians = mean_anomaly.radians();
-    let term1 =
-        (1.914_602 - (0.004_817 * julian_century) - (0.000_014 * julian_century.powf(2.0))) * mean_radians.sin();
+    let term1 = (1.914_602 - (0.004_817 * julian_century) - (0.000_014 * julian_century.powi(2))) * mean_radians.sin();
     let term2 = (0.019_993 - (0.000_101 * julian_century)) * (2.0 * mean_radians).sin();
     let term3 = 0.000_289 * (3.0 * mean_radians).sin();
 
@@ -83,8 +82,8 @@ pub fn mean_obliquity_of_the_ecliptic(julian_century: f64) -> Angle {
     // Equation from Astronomical Algorithms page 147
     let term1 = 23.439_291;
     let term2 = 0.013_004_167 * julian_century;
-    let term3 = 0.000_000_163_9 * julian_century.powf(2.0);
-    let term4 = 0.000_000_503_6 * julian_century.powf(3.0);
+    let term3 = 0.000_000_163_9 * julian_century.powi(2);
+    let term4 = 0.000_000_503_6 * julian_century.powi(3);
 
     Angle::new(term1 - term2 - term3 + term4)
 }
@@ -104,8 +103,8 @@ pub fn mean_sidereal_time(julian_century: f64) -> Angle {
     let julian_day = (julian_century * 36525.0) + 2_451_545.0;
     let term1 = 280.460_618_37;
     let term2 = 360.985_647_366_29 * (julian_day - 2_451_545.0);
-    let term3 = 0.000_387_933 * julian_century.powf(2.0);
-    let term4 = julian_century.powf(3.0) / 38_710_000.0;
+    let term3 = 0.000_387_933 * julian_century.powi(2);
+    let term4 = julian_century.powi(3) / 38_710_000.0;
     let degrees = term1 + term2 + term3 - term4;
 
     Angle::new(degrees).unwound()
@@ -273,16 +272,8 @@ pub fn julian_century(julian_day: f64) -> f64 {
 }
 
 // Checks if the given year is a leap year.
-pub fn is_leap_year(year: u32) -> bool {
-    if year % 4 != 0 {
-        return false;
-    }
-
-    if year % 100 == 0 && year % 400 != 0 {
-        return false;
-    }
-
-    true
+pub const fn is_leap_year(year: u32) -> bool {
+    year % 400 == 0 || (year % 4 == 0 && year % 100 != 0)
 }
 
 // Twilight adjustment based on observational data for use

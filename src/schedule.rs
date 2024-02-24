@@ -40,7 +40,7 @@ pub struct PrayerTimes {
 
 impl PrayerTimes {
     #[must_use]
-    pub fn new(date: Date<Utc>, coordinates: Coordinates, parameters: Parameters) -> PrayerTimes {
+    pub fn new(date: Date<Utc>, coordinates: Coordinates, parameters: Parameters) -> Self {
         let prayer_date = date.and_hms(0, 0, 0);
         let tomorrow = prayer_date.tomorrow();
         let solar_time = SolarTime::new(prayer_date, coordinates);
@@ -49,7 +49,7 @@ impl PrayerTimes {
         let asr = solar_time.afternoon(parameters.madhab.shadow().into());
         let night = solar_time_tomorrow.sunrise.signed_duration_since(solar_time.sunset);
 
-        let final_fajr = PrayerTimes::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date)
+        let final_fajr = Self::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date)
             .rounded_minute(parameters.rounding);
         let final_sunrise = solar_time
             .sunrise
@@ -64,14 +64,14 @@ impl PrayerTimes {
             .rounded_minute(parameters.rounding);
         let final_maghrib = ops::adjust_time(&solar_time.sunset, parameters.time_adjustments(Prayer::Maghrib))
             .rounded_minute(parameters.rounding);
-        let final_isha = PrayerTimes::calculate_isha(parameters, solar_time, night, coordinates, prayer_date)
+        let final_isha = Self::calculate_isha(parameters, solar_time, night, coordinates, prayer_date)
             .rounded_minute(parameters.rounding);
 
         // Calculate the middle of the night and qiyam times
         let (final_middle_of_night, final_qiyam, final_fajr_tomorrow) =
-            PrayerTimes::calculate_qiyam(final_maghrib, parameters, solar_time_tomorrow, coordinates, tomorrow);
+            Self::calculate_qiyam(final_maghrib, parameters, solar_time_tomorrow, coordinates, tomorrow);
 
-        PrayerTimes {
+        Self {
             fajr: final_fajr,
             sunrise: final_sunrise,
             dhuhr: final_dhuhr,
@@ -88,7 +88,7 @@ impl PrayerTimes {
     }
 
     #[must_use]
-    pub fn time(&self, prayer: Prayer) -> DateTime<Utc> {
+    pub const fn time(&self, prayer: Prayer) -> DateTime<Utc> {
         match prayer {
             Prayer::Fajr => self.fajr,
             Prayer::Sunrise => self.sunrise,
@@ -166,18 +166,17 @@ impl PrayerTimes {
         coordinates: Coordinates,
         prayer_date: DateTime<Utc>,
     ) -> DateTime<Utc> {
-        let mut fajr = solar_time.time_for_solar_angle(Angle::new(-parameters.fajr_angle), false);
-
-        // special case for moonsighting committee above latitude 55
-        if parameters.method == Method::MoonsightingCommittee && coordinates.latitude >= 55.0 {
+        let mut fajr = if parameters.method == Method::MoonsightingCommittee && coordinates.latitude >= 55.0 {
+            // special case for moonsighting committee above latitude 55
             let night_fraction = night.num_seconds() / 7;
-            fajr = solar_time
+            solar_time
                 .sunrise
                 .checked_add_signed(Duration::seconds(-night_fraction))
-                .unwrap();
+                .unwrap()
         } else {
             // Nothing to do.
-        }
+            solar_time.time_for_solar_angle(Angle::new(-parameters.fajr_angle), false)
+        };
 
         let safe_fajr = if parameters.method == Method::MoonsightingCommittee {
             let day_of_year = prayer_date.ordinal();
@@ -275,7 +274,7 @@ impl PrayerTimes {
         let solar_time_tomorrow = SolarTime::new(tomorrow, coordinates);
         let night = solar_time_tomorrow.sunrise.signed_duration_since(solar_time.sunset);
 
-        let tomorrow_fajr = PrayerTimes::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date);
+        let tomorrow_fajr = Self::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date);
         let night_duration = tomorrow_fajr.signed_duration_since(current_maghrib).num_seconds() as f64;
         let middle_night_portion = (night_duration / 2.0) as i64;
         let last_third_portion = (night_duration * (2.0 / 3.0)) as i64;
@@ -307,25 +306,25 @@ impl Default for PrayerSchedule {
 
 impl PrayerSchedule {
     #[must_use]
-    pub fn new() -> PrayerSchedule {
-        PrayerSchedule {
+    pub const fn new() -> Self {
+        Self {
             date: None,
             coordinates: None,
             params: None,
         }
     }
 
-    pub fn on(&mut self, date: Date<Utc>) -> &mut PrayerSchedule {
+    pub fn on(&mut self, date: Date<Utc>) -> &mut Self {
         self.date = Some(date);
         self
     }
 
-    pub fn for_location(&mut self, location: Coordinates) -> &mut PrayerSchedule {
+    pub fn for_location(&mut self, location: Coordinates) -> &mut Self {
         self.coordinates = Some(location);
         self
     }
 
-    pub fn with_configuration(&mut self, params: Parameters) -> &mut PrayerSchedule {
+    pub fn with_configuration(&mut self, params: Parameters) -> &mut Self {
         self.params = Some(params);
         self
     }
@@ -468,7 +467,7 @@ mod tests {
                 assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "12:05 AM");
             }
 
-            Err(_err) => assert!(false),
+            Err(_err) => unreachable!(),
         }
     }
 
@@ -505,7 +504,7 @@ mod tests {
                 assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "4:02 PM");
             }
 
-            Err(_err) => assert!(false),
+            Err(_err) => unreachable!(),
         }
     }
 }

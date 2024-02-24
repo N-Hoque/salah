@@ -25,11 +25,16 @@ impl Normalize for f64 {
 
 /// Convenience methods for the `DateTime` type.
 pub trait Stride {
+    #[must_use]
     fn tomorrow(&self) -> Self;
+    #[must_use]
     fn yesterday(&self) -> Self;
     fn julian_day(&self) -> f64;
+    #[must_use]
     fn adjust_time(&self, minutes: i64) -> Self;
+    #[must_use]
     fn next_date(&self, fwd: bool) -> Self;
+    #[must_use]
     fn rounded_minute(&self, rounding: Rounding) -> Self;
 }
 
@@ -81,9 +86,8 @@ impl<Tz: TimeZone> Stride for DateTime<Tz> {
     fn next_date(&self, fwd: bool) -> Self {
         let ordinal = if fwd { self.ordinal() + 1 } else { self.ordinal() - 1 };
 
-        match self.with_ordinal(ordinal) {
-            Some(dt) => dt,
-            None => {
+        self.with_ordinal(ordinal).map_or_else(
+            || {
                 if fwd {
                     self.with_year(self.year() + 1).unwrap().with_ordinal(1).unwrap()
                 } else {
@@ -94,8 +98,9 @@ impl<Tz: TimeZone> Stride for DateTime<Tz> {
                         .with_day(31)
                         .unwrap()
                 }
-            }
-        }
+            },
+            |dt| dt,
+        )
     }
 }
 
@@ -105,79 +110,75 @@ pub struct Angle {
 }
 
 impl Angle {
-    pub fn new(value: f64) -> Self {
-        Angle { degrees: value }
+    pub const fn new(value: f64) -> Self {
+        Self { degrees: value }
     }
 
     pub fn from_radians(value: f64) -> Self {
-        Angle {
-            degrees: (value * 180.0) / PI,
+        Self {
+            degrees: value.to_degrees(),
         }
     }
 
-    pub fn radians(&self) -> f64 {
-        (self.degrees * PI) / 180.0
+    pub fn radians(self) -> f64 {
+        self.degrees.to_radians()
     }
 
-    pub fn unwound(&self) -> Angle {
-        Angle {
+    pub fn unwound(self) -> Self {
+        Self {
             degrees: self.degrees.normalized_to_scale(360.0),
         }
     }
 
-    pub fn quadrant_shifted(&self) -> Angle {
-        let angle: Angle;
-
+    pub fn quadrant_shifted(self) -> Self {
         if self.degrees >= -180.0 && self.degrees <= 180.0 {
             // Nothing to do. Already initialized
             // to the default value.
-            angle = *self;
+            self
         } else {
             let value = self.degrees - (360.0 * (self.degrees / 360.0).round());
-            angle = Angle { degrees: value };
+            Self { degrees: value }
         }
-
-        angle
     }
 }
 
 impl Add for Angle {
-    type Output = Angle;
+    type Output = Self;
 
-    fn add(self, rhs: Angle) -> Angle {
-        Angle {
+    fn add(self, rhs: Self) -> Self {
+        Self {
             degrees: self.degrees + rhs.degrees,
         }
     }
 }
 
 impl Sub for Angle {
-    type Output = Angle;
+    type Output = Self;
 
-    fn sub(self, rhs: Angle) -> Angle {
-        Angle {
+    fn sub(self, rhs: Self) -> Self {
+        Self {
             degrees: self.degrees - rhs.degrees,
         }
     }
 }
 
 impl Mul for Angle {
-    type Output = Angle;
+    type Output = Self;
 
-    fn mul(self, rhs: Angle) -> Angle {
-        Angle {
+    fn mul(self, rhs: Self) -> Self {
+        Self {
             degrees: self.degrees * rhs.degrees,
         }
     }
 }
 
 impl Div for Angle {
-    type Output = Angle;
+    type Output = Self;
 
-    fn div(self, rhs: Angle) -> Angle {
-        assert!(!(rhs.degrees == 0.0), "Cannot divide by zero.");
+    fn div(self, rhs: Self) -> Self {
+        assert!(rhs.degrees != 0.0, "Cannot divide by zero.");
 
-        Angle {
+        Self {
             degrees: self.degrees / rhs.degrees,
         }
     }
@@ -193,19 +194,19 @@ pub struct Coordinates {
 
 impl Coordinates {
     #[must_use]
-    pub fn new(latitude: f64, longitude: f64) -> Self {
-        Coordinates { latitude, longitude }
+    pub const fn new(latitude: f64, longitude: f64) -> Self {
+        Self { latitude, longitude }
     }
 }
 
 impl Coordinates {
     #[must_use]
-    pub fn latitude_angle(&self) -> Angle {
+    pub const fn latitude_angle(&self) -> Angle {
         Angle::new(self.latitude)
     }
 
     #[must_use]
-    pub fn longitude_angle(&self) -> Angle {
+    pub const fn longitude_angle(&self) -> Angle {
         Angle::new(self.longitude)
     }
 }
@@ -288,7 +289,7 @@ mod tests {
 
     #[test]
     fn calculate_rounding_up() {
-        let time_1 = Utc.ymd(2015, 07, 13).and_hms(05, 59, 20);
+        let time_1 = Utc.ymd(2015, 7, 13).and_hms(5, 59, 20);
 
         assert_eq!(
             time_1.rounded_minute(Rounding::Up),
@@ -298,7 +299,7 @@ mod tests {
 
     #[test]
     fn calculate_rounding_none() {
-        let time_1 = Utc.ymd(2015, 07, 13).and_hms(05, 59, 20);
+        let time_1 = Utc.ymd(2015, 7, 13).and_hms(5, 59, 20);
 
         assert_eq!(
             time_1.rounded_minute(Rounding::None),

@@ -23,6 +23,8 @@
 //!                       .calculate();
 //! ```
 
+#![warn(clippy::pedantic, clippy::nursery)]
+
 mod astronomy;
 mod models;
 mod schedule;
@@ -119,7 +121,7 @@ mod tests {
                 assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "1:57 AM");
             }
 
-            Err(_err) => assert!(false),
+            Err(_err) => unreachable!(),
         }
     }
 
@@ -155,7 +157,7 @@ mod tests {
                 );
                 assert_eq!(schedule.time(Prayer::Qiyam).format("%-l:%M %p").to_string(), "5:59 AM");
             }
-            Err(_err) => assert!(false),
+            Err(_err) => unreachable!(),
         }
     }
 
@@ -189,7 +191,7 @@ mod tests {
                 assert_eq!(sgt_maghrib.format("%-l:%M %p").to_string(), "7:16 PM");
                 assert_eq!(sgt_isha.format("%-l:%M %p").to_string(), "8:30 PM");
             }
-            Err(_err) => assert!(false),
+            Err(_err) => unreachable!(),
         }
     }
 
@@ -238,7 +240,7 @@ mod tests {
                 assert_eq!(wib_maghrib.format("%-l:%M %p").to_string(), "6:16 PM");
                 assert_eq!(wib_isha.format("%-l:%M %p").to_string(), "7:31 PM");
             }
-            Err(_err) => assert!(false),
+            Err(_err) => unreachable!(),
         }
     }
 }

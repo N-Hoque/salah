@@ -7,7 +7,7 @@
 /// Setting for the Asr prayer time.
 /// For Hanafi madhab, the Asr is bit later
 /// than that of the Shafi madhab.
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Madhab {
     Shafi = 1,
     Hanafi = 2,
@@ -15,7 +15,7 @@ pub enum Madhab {
 
 impl Madhab {
     #[must_use]
-    pub fn shadow(&self) -> i32 {
+    pub const fn shadow(&self) -> i32 {
         *self as i32
     }
 }

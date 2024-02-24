@@ -9,7 +9,7 @@ use std::default::Default;
 /// Time adjustment for all prayer times.
 /// The value is specified in *minutes* and
 /// can be either positive or negative.
-#[derive(PartialEq, Debug, Copy, Clone, Default)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct TimeAdjustment {
     pub fajr: i64,
     pub sunrise: i64,
@@ -21,8 +21,8 @@ pub struct TimeAdjustment {
 
 impl TimeAdjustment {
     #[must_use]
-    pub fn new(fajr: i64, sunrise: i64, dhuhr: i64, asr: i64, maghrib: i64, isha: i64) -> Self {
-        TimeAdjustment {
+    pub const fn new(fajr: i64, sunrise: i64, dhuhr: i64, asr: i64, maghrib: i64, isha: i64) -> Self {
+        Self {
             fajr,
             sunrise,
             dhuhr,
@@ -52,8 +52,8 @@ impl Default for Adjustment {
 
 impl Adjustment {
     #[must_use]
-    pub fn new() -> Adjustment {
-        Adjustment {
+    pub const fn new() -> Self {
+        Self {
             fajr: 0,
             sunrise: 0,
             dhuhr: 0,
@@ -63,38 +63,38 @@ impl Adjustment {
         }
     }
 
-    pub fn fajr(&mut self, fajr: i64) -> &mut Adjustment {
+    pub fn fajr(&mut self, fajr: i64) -> &mut Self {
         self.fajr = fajr;
         self
     }
 
-    pub fn sunrise(&mut self, sunrise: i64) -> &mut Adjustment {
+    pub fn sunrise(&mut self, sunrise: i64) -> &mut Self {
         self.sunrise = sunrise;
         self
     }
 
-    pub fn dhuhr(&mut self, dhuhr: i64) -> &mut Adjustment {
+    pub fn dhuhr(&mut self, dhuhr: i64) -> &mut Self {
         self.dhuhr = dhuhr;
         self
     }
 
-    pub fn asr(&mut self, asr: i64) -> &mut Adjustment {
+    pub fn asr(&mut self, asr: i64) -> &mut Self {
         self.asr = asr;
         self
     }
 
-    pub fn maghrib(&mut self, maghrib: i64) -> &mut Adjustment {
+    pub fn maghrib(&mut self, maghrib: i64) -> &mut Self {
         self.maghrib = maghrib;
         self
     }
 
-    pub fn isha(&mut self, isha: i64) -> &mut Adjustment {
+    pub fn isha(&mut self, isha: i64) -> &mut Self {
         self.isha = isha;
         self
     }
 
     #[must_use]
-    pub fn done(&self) -> TimeAdjustment {
+    pub const fn done(&self) -> TimeAdjustment {
         TimeAdjustment {
             fajr: self.fajr,
             sunrise: self.sunrise,
