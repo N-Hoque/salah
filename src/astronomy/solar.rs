@@ -60,7 +60,7 @@ impl SolarCoordinates {
                     / 3600.0,
         );
 
-        SolarCoordinates {
+        Self {
             declination,
             right_ascension,
             apparent_sidereal_time,
@@ -83,9 +83,13 @@ pub struct SolarTime {
 }
 
 impl SolarTime {
-    pub fn new(date: DateTime<Utc>, coordinates: Coordinates) -> SolarTime {
+    pub fn new<Tz: TimeZone>(date: &DateTime<Tz>, coordinates: Coordinates) -> Self {
         // All calculation need to occur at 0h0m UTC
-        let today = Utc.ymd(date.year(), date.month(), date.day()).and_hms(0, 0, 0);
+        let date = date.to_utc();
+
+        let today = Utc
+            .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
+            .unwrap();
         let tomorrow = today.tomorrow();
         let yesterday = today.yesterday();
         let prev_solar = SolarCoordinates::new(yesterday.julian_day());
@@ -160,7 +164,7 @@ impl SolarTime {
             self.next_solar.declination,
         );
 
-        SolarTime::setting_hour(hours, &self.date).unwrap()
+        Self::setting_hour(hours, &self.date).unwrap()
     }
 
     pub fn afternoon(&self, shadow_length: f64) -> DateTime<Utc> {
@@ -172,21 +176,28 @@ impl SolarTime {
         self.time_for_solar_angle(angle, true)
     }
 
-    fn setting_hour(value: f64, date: &DateTime<Utc>) -> Option<DateTime<Utc>> {
+    fn setting_hour<Tz: TimeZone>(value: f64, date: &DateTime<Tz>) -> Option<DateTime<Utc>> {
         if value.is_normal() {
             let calculated_hours = value.floor();
             let calculated_minutes = ((value - calculated_hours) * 60.0).floor();
             let calculated_seconds = ((value - (calculated_hours + calculated_minutes / 60.0)) * 60.0 * 60.0).floor();
 
-            let (adjusted_hour, adjusted_date) = SolarTime::hour_adjustment(calculated_hours, date);
+            let (adjusted_hour, adjusted_date) = Self::hour_adjustment(calculated_hours, date);
 
             // Round to the nearest minute
             let adjusted_mins = (calculated_minutes + calculated_seconds / 60.0).round() as u32;
             let adjusted_secs: u32 = 0;
 
             let adjusted = Utc
-                .ymd(adjusted_date.year(), adjusted_date.month(), adjusted_date.day())
-                .and_hms(adjusted_hour, adjusted_mins, adjusted_secs);
+                .with_ymd_and_hms(
+                    adjusted_date.year(),
+                    adjusted_date.month(),
+                    adjusted_date.day(),
+                    adjusted_hour,
+                    adjusted_mins,
+                    adjusted_secs,
+                )
+                .unwrap();
 
             Some(adjusted)
         } else {
@@ -195,16 +206,17 @@ impl SolarTime {
         }
     }
 
-    fn hour_adjustment(calculated_hours: f64, date: &DateTime<Utc>) -> (u32, DateTime<Utc>) {
+    fn hour_adjustment<Tz: TimeZone>(calculated_hours: f64, date: &DateTime<Tz>) -> (u32, DateTime<Utc>) {
         // Adjust the hour to be within 0..=23,
         // wrapping around as needed; otherwise
         // chrono method will panic.
+        let date = date.to_utc();
         if calculated_hours < 0.0 {
             ((calculated_hours + 24.0) as u32, date.yesterday())
         } else if calculated_hours >= 24.0 {
             ((calculated_hours - 24.0) as u32, date.tomorrow())
         } else {
-            (calculated_hours as u32, *date)
+            (calculated_hours as u32, date)
         }
     }
 }
@@ -245,17 +257,17 @@ mod tests {
     #[test]
     fn zero_out_time_for_a_date() {
         // Local date below is 2019-01-11T04:41:19Z in UTC
-        let utc_date = Utc.ymd(2019, 1, 11).and_hms(23, 41, 19);
+        let utc_date = Utc.with_ymd_and_hms(2019, 1, 11, 23, 41, 19).unwrap();
         let updated = Utc
-            .ymd(utc_date.year(), utc_date.month(), utc_date.day())
-            .and_hms(0, 0, 0);
+            .with_ymd_and_hms(utc_date.year(), utc_date.month(), utc_date.day(), 0, 0, 0)
+            .unwrap();
 
-        assert_eq!(updated, Utc.ymd(2019, 1, 11).and_hms(0, 0, 0));
+        assert_eq!(updated, Utc.with_ymd_and_hms(2019, 1, 11, 0, 0, 0).unwrap());
     }
 
     #[test]
     fn calculate_date_for_tomorrow() {
-        let date = Local.ymd(2019, 1, 10).and_hms(0, 0, 0);
+        let date = Local.with_ymd_and_hms(2019, 1, 10, 0, 0, 0).unwrap();
         let tomorrow = date.tomorrow();
 
         assert_eq!(tomorrow.year(), 2019);
@@ -265,7 +277,7 @@ mod tests {
 
     #[test]
     fn calculate_julian_date() {
-        let local = Local.ymd(1992, 10, 13).and_hms(0, 0, 0);
+        let local = Local.with_ymd_and_hms(1992, 10, 13, 0, 0, 0).unwrap();
         let utc = local.with_timezone(&Utc);
         let julian_day = ops::julian_day(1992, 10, 13, 0.0);
 
@@ -277,7 +289,7 @@ mod tests {
     fn calculate_solar_time() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
-        let solar = SolarTime::new(date, coordinates);
+        let solar = SolarTime::new(&date, coordinates);
         let transit_date = Utc.with_ymd_and_hms(2015, 7, 12, 17, 20, 0).unwrap();
         let sunrise_date = Utc.with_ymd_and_hms(2015, 7, 12, 10, 8, 0).unwrap();
         let sunset_date = Utc.with_ymd_and_hms(2015, 7, 13, 00, 32, 0).unwrap();
@@ -290,8 +302,8 @@ mod tests {
     #[test]
     fn calculate_time_for_solar_angle() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
-        let date = Utc.ymd(2015, 7, 12).and_hms(0, 0, 0);
-        let solar = SolarTime::new(date, coordinates);
+        let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
+        let solar = SolarTime::new(&date, coordinates);
         let angle = Angle::new(-6.0);
         let twilight_start = solar.time_for_solar_angle(angle, false);
         let twilight_end = solar.time_for_solar_angle(angle, true);
@@ -303,8 +315,10 @@ mod tests {
     #[test]
     fn calculate_corrected_hour_angle() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
-        let date = Utc.ymd(2015, 7, 12).and_hms(0, 0, 0);
-        let today = Utc.ymd(date.year(), date.month(), date.day()).and_hms(0, 0, 0);
+        let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
+        let today = Utc
+            .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
+            .unwrap();
         let tomorrow = today.tomorrow();
         let yesterday = today.yesterday();
         let prev_solar = SolarCoordinates::new(yesterday.julian_day());

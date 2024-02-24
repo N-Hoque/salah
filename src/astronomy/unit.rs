@@ -325,31 +325,31 @@ mod tests {
 
     #[test]
     fn calculate_rounding_nearest() {
-        let time_1 = Utc.ymd(2015, 7, 13).and_hms(4, 37, 30);
+        let time_1 = Utc.with_ymd_and_hms(2015, 7, 13, 4, 37, 30).unwrap();
 
         assert_eq!(
             time_1.rounded_minute(Rounding::Nearest),
-            Utc.ymd(2015, 7, 13).and_hms(4, 38, 00)
+            Utc.with_ymd_and_hms(2015, 7, 13, 4, 38, 00).unwrap()
         );
     }
 
     #[test]
     fn calculate_rounding_up() {
-        let time_1 = Utc.ymd(2015, 7, 13).and_hms(5, 59, 20);
+        let time_1 = Utc.with_ymd_and_hms(2015, 7, 13, 5, 59, 20).unwrap();
 
         assert_eq!(
             time_1.rounded_minute(Rounding::Up),
-            Utc.ymd(2015, 7, 13).and_hms(6, 00, 00)
+            Utc.with_ymd_and_hms(2015, 7, 13, 6, 00, 00).unwrap()
         );
     }
 
     #[test]
     fn calculate_rounding_none() {
-        let time_1 = Utc.ymd(2015, 7, 13).and_hms(5, 59, 20);
+        let time_1 = Utc.with_ymd_and_hms(2015, 7, 13, 5, 59, 20).unwrap();
 
         assert_eq!(
             time_1.rounded_minute(Rounding::None),
-            Utc.ymd(2015, 7, 13).and_hms(5, 59, 20)
+            Utc.with_ymd_and_hms(2015, 7, 13, 5, 59, 20).unwrap()
         );
     }
 }
