@@ -212,6 +212,7 @@ impl SolarTime {
 #[cfg(test)]
 mod tests {
     use chrono::{Datelike, Local, TimeZone, Utc};
+    use float_cmp::assert_approx_eq;
 
     use super::*;
     use crate::astronomy::ops;
@@ -221,9 +222,24 @@ mod tests {
         let julian_day = ops::julian_day(1992, 10, 13, 0.0);
         let solar = SolarCoordinates::new(julian_day);
 
-        assert_eq!(solar.declination.degrees, -7.785_068_515_264_879_5);
-        assert_eq!(solar.right_ascension.degrees, 198.380_822_142_518_8);
-        assert_eq!(solar.right_ascension.unwound().degrees, 198.380_822_142_518_8);
+        assert_approx_eq!(
+            f64,
+            solar.declination.degrees,
+            -7.785_068_515_264_879_5,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            solar.right_ascension.degrees,
+            198.380_822_142_518_8,
+            epsilon = 0.000_000_1
+        );
+        assert_approx_eq!(
+            f64,
+            solar.right_ascension.unwound().degrees,
+            198.380_822_142_518_8,
+            epsilon = 0.000_000_1
+        );
     }
 
     #[test]
@@ -253,17 +269,17 @@ mod tests {
         let utc = local.with_timezone(&Utc);
         let julian_day = ops::julian_day(1992, 10, 13, 0.0);
 
-        assert_eq!(utc.julian_day(), julian_day);
+        assert_approx_eq!(f64, utc.julian_day(), julian_day, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn calculate_solar_time() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
-        let date = Utc.ymd(2015, 7, 12).and_hms(0, 0, 0);
+        let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let solar = SolarTime::new(date, coordinates);
-        let transit_date = Utc.ymd(2015, 07, 12).and_hms(17, 20, 0);
-        let sunrise_date = Utc.ymd(2015, 07, 12).and_hms(10, 08, 0);
-        let sunset_date = Utc.ymd(2015, 07, 13).and_hms(00, 32, 0);
+        let transit_date = Utc.with_ymd_and_hms(2015, 7, 12, 17, 20, 0).unwrap();
+        let sunrise_date = Utc.with_ymd_and_hms(2015, 7, 12, 10, 8, 0).unwrap();
+        let sunset_date = Utc.with_ymd_and_hms(2015, 7, 13, 00, 32, 0).unwrap();
 
         assert_eq!(solar.transit, transit_date);
         assert_eq!(solar.sunrise, sunrise_date);
@@ -313,6 +329,6 @@ mod tests {
             next_solar.declination,
         );
 
-        assert_eq!(sunrise_time, 10.131_800_480_632_85);
+        assert_approx_eq!(f64, sunrise_time, 10.131_800_480_632_85, epsilon = 0.000_000_1);
     }
 }

@@ -131,6 +131,8 @@ impl Method {
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::assert_approx_eq;
+
     use super::*;
 
     #[test]
@@ -139,8 +141,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::MuslimWorldLeague);
-        assert_eq!(params.fajr_angle, 18.0);
-        assert_eq!(params.isha_angle, 17.0);
+        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 17.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -150,8 +152,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Egyptian);
-        assert_eq!(params.fajr_angle, 19.5);
-        assert_eq!(params.isha_angle, 17.5);
+        assert_approx_eq!(f64, params.fajr_angle, 19.5, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 17.5, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -161,8 +163,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Karachi);
-        assert_eq!(params.fajr_angle, 18.0);
-        assert_eq!(params.isha_angle, 18.0);
+        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -172,8 +174,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::UmmAlQura);
-        assert_eq!(params.fajr_angle, 18.5);
-        assert_eq!(params.isha_angle, 0.0);
+        assert_approx_eq!(f64, params.fajr_angle, 18.5, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 0.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 90);
     }
 
@@ -183,8 +185,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Dubai);
-        assert_eq!(params.fajr_angle, 18.2, "Parameters: {params:?}");
-        assert_eq!(params.isha_angle, 18.2);
+        assert_approx_eq!(f64, params.fajr_angle, 18.2, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 18.2, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -194,8 +196,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::MoonsightingCommittee);
-        assert_eq!(params.fajr_angle, 18.0);
-        assert_eq!(params.isha_angle, 18.0);
+        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -205,8 +207,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::NorthAmerica);
-        assert_eq!(params.fajr_angle, 15.0);
-        assert_eq!(params.isha_angle, 15.0);
+        assert_approx_eq!(f64, params.fajr_angle, 15.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 15.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -216,8 +218,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Kuwait);
-        assert_eq!(params.fajr_angle, 18.0);
-        assert_eq!(params.isha_angle, 17.5);
+        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 17.5, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -227,8 +229,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Qatar);
-        assert_eq!(params.fajr_angle, 18.0);
-        assert_eq!(params.isha_angle, 0.0);
+        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 0.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 90);
     }
 
@@ -238,8 +240,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Singapore);
-        assert_eq!(params.fajr_angle, 20.0);
-        assert_eq!(params.isha_angle, 18.0);
+        assert_approx_eq!(f64, params.fajr_angle, 20.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
@@ -249,8 +251,8 @@ mod tests {
         let params = method.parameters();
 
         assert_eq!(params.method, Method::Other);
-        assert_eq!(params.fajr_angle, 0.0);
-        assert_eq!(params.isha_angle, 0.0);
+        assert_approx_eq!(f64, params.fajr_angle, 0.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, 0.0, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 }
