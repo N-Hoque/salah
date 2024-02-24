@@ -35,6 +35,20 @@ pub struct PrayerTimes {
     fajr_tomorrow: DateTime<Utc>,
 }
 
+impl std::fmt::Display for PrayerTimes {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut result = format!("Date: {}\n\n", self.fajr.date_naive());
+
+        result += &format!("Fajr: {}\n", self.fajr.time());
+        result += &format!("Dhuhr: {}\n", self.dhuhr.time());
+        result += &format!("Asr: {}\n", self.asr.time());
+        result += &format!("Maghrib: {}\n", self.maghrib.time());
+        result += &format!("Isha: {}\n", self.isha.time());
+
+        write!(f, "{result}")
+    }
+}
+
 impl PrayerTimes {
     #[must_use]
     pub fn new<Tz: TimeZone>(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
