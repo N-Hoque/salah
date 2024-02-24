@@ -43,6 +43,7 @@ impl fmt::Display for Qiblah {
 
 #[cfg(test)]
 mod tests {
+    use float_cmp::assert_approx_eq;
     use spectral::prelude::*;
 
     use super::*;
@@ -60,7 +61,7 @@ mod tests {
         let sf = Coordinates::new(37.7749, -122.4194);
         let qiblah = Qiblah::new(sf);
 
-        assert_eq!(qiblah.value(), 18.843_822_245_692_426);
+        assert_approx_eq!(f64, qiblah.value(), 18.843_822_245_692_426, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -68,7 +69,7 @@ mod tests {
         let dc = Coordinates::new(38.9072, -77.0369);
         let qiblah = Qiblah::new(dc);
 
-        assert_eq!(qiblah.value(), 56.560_468_214_635_99);
+        assert_approx_eq!(f64, qiblah.value(), 56.560_468_214_635_99, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -76,7 +77,7 @@ mod tests {
         let dc = Coordinates::new(61.2181, -149.9003);
         let qiblah = Qiblah::new(dc);
 
-        assert_eq!(qiblah.value(), 350.883_076_115_985_3);
+        assert_approx_eq!(f64, qiblah.value(), 350.883_076_115_985_3, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -84,7 +85,7 @@ mod tests {
         let sydney = Coordinates::new(-33.8688, 151.2093);
         let qiblah = Qiblah::new(sydney);
 
-        assert_eq!(qiblah.value(), 277.499_604_448_739_9);
+        assert_approx_eq!(f64, qiblah.value(), 277.499_604_448_739_9, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -92,7 +93,7 @@ mod tests {
         let auckland = Coordinates::new(-36.8485, 174.7633);
         let qiblah = Qiblah::new(auckland);
 
-        assert_eq!(qiblah.value(), 261.197_326_403_658_45);
+        assert_approx_eq!(f64, qiblah.value(), 261.197_326_403_658_45, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -108,7 +109,7 @@ mod tests {
         let paris = Coordinates::new(48.8566, 2.3522);
         let qiblah = Qiblah::new(paris);
 
-        assert_eq!(qiblah.value(), 119.163_135_421_833_47);
+        assert_approx_eq!(f64, qiblah.value(), 119.163_135_421_833_47, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -116,7 +117,7 @@ mod tests {
         let oslo = Coordinates::new(59.9139, 10.7522);
         let qiblah = Qiblah::new(oslo);
 
-        assert_eq!(qiblah.value(), 139.027_856_055_375_14);
+        assert_approx_eq!(f64, qiblah.value(), 139.027_856_055_375_14, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -124,7 +125,7 @@ mod tests {
         let islamabad = Coordinates::new(33.7294, 73.0931);
         let qiblah = Qiblah::new(islamabad);
 
-        assert_eq!(qiblah.value(), 255.881_615_678_543_6);
+        assert_approx_eq!(f64, qiblah.value(), 255.881_615_678_543_6, epsilon = 0.000_000_1);
     }
 
     #[test]
@@ -132,7 +133,7 @@ mod tests {
         let tokyo = Coordinates::new(35.6895, 139.6917);
         let qiblah = Qiblah::new(tokyo);
 
-        assert_eq!(qiblah.value(), 293.020_724_414_411_63);
+        assert_approx_eq!(f64, qiblah.value(), 293.020_724_414_411_63, epsilon = 0.000_000_1);
     }
 
     #[test]
