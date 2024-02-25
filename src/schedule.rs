@@ -37,6 +37,8 @@ pub struct PrayerTimes {
 
 impl std::fmt::Display for PrayerTimes {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (hours, minutes) = self.time_remaining();
+
         let prayer_table = tabled::col![
             self.fajr.date_naive().format("%A, %-d %B, %C%y"),
             tabled::row![
@@ -47,8 +49,17 @@ impl std::fmt::Display for PrayerTimes {
                     self.asr.time().format("%H:%M"),
                     self.maghrib.time().format("%H:%M"),
                     self.isha.time().format("%H:%M")
-                ]
+                ],
             ],
+            tabled::row![
+                tabled::col!["Current Time", "Current Prayer", "Next Prayer", "Time Left"],
+                tabled::col![
+                    chrono::Utc::now().time().format("%H:%M:%S"),
+                    self.current(),
+                    self.next(),
+                    format!("{hours}h {minutes}m")
+                ],
+            ]
         ];
 
         write!(f, "{prayer_table}")
