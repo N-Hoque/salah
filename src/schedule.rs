@@ -322,7 +322,7 @@ impl PrayerSchedule {
         self
     }
 
-    pub fn with_configuration(&mut self, params: Parameters) -> &mut Self {
+    pub fn with_parameters(&mut self, params: Parameters) -> &mut Self {
         self.params = Some(params);
         self
     }
@@ -436,7 +436,7 @@ mod tests {
         let result = PrayerSchedule::new()
             .on(date)
             .for_location(coordinates)
-            .with_configuration(params)
+            .with_parameters(params)
             .calculate();
 
         match result {
@@ -473,7 +473,7 @@ mod tests {
         let result = PrayerSchedule::new()
             .on(date)
             .for_location(coordinates)
-            .with_configuration(params)
+            .with_parameters(params)
             .calculate();
 
         match result {

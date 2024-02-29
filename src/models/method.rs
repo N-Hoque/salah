@@ -80,7 +80,7 @@ impl Method {
                 .fajr_angle(18.0)
                 .isha_angle(17.0)
                 .method(*self)
-                .method_adjustments(Adjustment::new().dhuhr(1).done())
+                .method_adjustments(Adjustment::default().dhuhr(1).build().unwrap())
                 .build()
                 .unwrap(),
 
@@ -88,7 +88,7 @@ impl Method {
                 .fajr_angle(19.5)
                 .isha_angle(17.5)
                 .method(*self)
-                .method_adjustments(Adjustment::new().dhuhr(1).done())
+                .method_adjustments(Adjustment::default().dhuhr(1).build().unwrap())
                 .build()
                 .unwrap(),
 
@@ -96,7 +96,7 @@ impl Method {
                 .fajr_angle(18.0)
                 .isha_angle(18.0)
                 .method(*self)
-                .method_adjustments(Adjustment::new().dhuhr(1).done())
+                .method_adjustments(Adjustment::default().dhuhr(1).build().unwrap())
                 .build()
                 .unwrap(),
 
@@ -111,7 +111,15 @@ impl Method {
                 .fajr_angle(18.2)
                 .isha_angle(18.2)
                 .method(*self)
-                .method_adjustments(Adjustment::new().sunrise(-3).dhuhr(3).asr(3).maghrib(3).done())
+                .method_adjustments(
+                    Adjustment::default()
+                        .sunrise(-3)
+                        .dhuhr(3)
+                        .asr(3)
+                        .maghrib(3)
+                        .build()
+                        .unwrap(),
+                )
                 .build()
                 .unwrap(),
 
@@ -119,7 +127,7 @@ impl Method {
                 .fajr_angle(18.0)
                 .isha_angle(18.0)
                 .method(*self)
-                .method_adjustments(Adjustment::new().dhuhr(5).maghrib(3).done())
+                .method_adjustments(Adjustment::default().dhuhr(5).maghrib(3).build().unwrap())
                 .build()
                 .unwrap(),
 
@@ -127,7 +135,7 @@ impl Method {
                 .fajr_angle(15.0)
                 .isha_angle(15.0)
                 .method(*self)
-                .method_adjustments(Adjustment::new().dhuhr(1).done())
+                .method_adjustments(Adjustment::default().dhuhr(1).build().unwrap())
                 .build()
                 .unwrap(),
 
@@ -150,7 +158,7 @@ impl Method {
                 .fajr_angle(20.0)
                 .isha_angle(18.0)
                 .method(*self)
-                .method_adjustments(Adjustment::new().dhuhr(1).done())
+                .method_adjustments(Adjustment::default().dhuhr(1).build().unwrap())
                 .rounding(Rounding::Up)
                 .build()
                 .unwrap(),
@@ -167,7 +175,15 @@ impl Method {
                 .fajr_angle(18.0)
                 .isha_angle(17.0)
                 .method(*self)
-                .method_adjustments(Adjustment::new().sunrise(-7).dhuhr(5).asr(4).maghrib(7).done())
+                .method_adjustments(
+                    Adjustment::default()
+                        .sunrise(-7)
+                        .dhuhr(5)
+                        .asr(4)
+                        .maghrib(7)
+                        .build()
+                        .unwrap(),
+                )
                 .build()
                 .unwrap(),
 
