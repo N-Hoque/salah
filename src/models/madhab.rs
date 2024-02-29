@@ -15,8 +15,8 @@ pub enum Madhab {
 
 impl Madhab {
     #[must_use]
-    pub const fn shadow(&self) -> i32 {
-        *self as i32
+    pub const fn shadow(self) -> i32 {
+        self as i32
     }
 }
 
