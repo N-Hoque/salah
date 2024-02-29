@@ -76,55 +76,107 @@ impl Method {
     #[must_use]
     pub fn parameters(&self) -> Parameters {
         match self {
-            Self::MuslimWorldLeague => Configuration::new(18.0, 17.0)
+            Self::MuslimWorldLeague => Configuration::new()
+                .fajr_angle(18.0)
+                .isha_angle(17.0)
                 .method(*self)
                 .method_adjustments(Adjustment::new().dhuhr(1).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::Egyptian => Configuration::new(19.5, 17.5)
+            Self::Egyptian => Configuration::new()
+                .fajr_angle(19.5)
+                .isha_angle(17.5)
                 .method(*self)
                 .method_adjustments(Adjustment::new().dhuhr(1).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::Karachi => Configuration::new(18.0, 18.0)
+            Self::Karachi => Configuration::new()
+                .fajr_angle(18.0)
+                .isha_angle(18.0)
                 .method(*self)
                 .method_adjustments(Adjustment::new().dhuhr(1).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::UmmAlQura => Configuration::new(18.5, 0.0).method(*self).isha_interval(90).done(),
-            Self::Dubai => Configuration::new(18.2, 18.2)
+            Self::UmmAlQura => Configuration::new()
+                .fajr_angle(18.5)
+                .isha_angle(0.0)
+                .method(*self)
+                .isha_interval(90)
+                .build()
+                .unwrap(),
+            Self::Dubai => Configuration::new()
+                .fajr_angle(18.2)
+                .isha_angle(18.2)
                 .method(*self)
                 .method_adjustments(Adjustment::new().sunrise(-3).dhuhr(3).asr(3).maghrib(3).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::MoonsightingCommittee => Configuration::new(18.0, 18.0)
+            Self::MoonsightingCommittee => Configuration::new()
+                .fajr_angle(18.0)
+                .isha_angle(18.0)
                 .method(*self)
                 .method_adjustments(Adjustment::new().dhuhr(5).maghrib(3).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::NorthAmerica => Configuration::new(15.0, 15.0)
+            Self::NorthAmerica => Configuration::new()
+                .fajr_angle(15.0)
+                .isha_angle(15.0)
                 .method(*self)
                 .method_adjustments(Adjustment::new().dhuhr(1).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::Kuwait => Configuration::new(18.0, 17.5).method(*self).done(),
+            Self::Kuwait => Configuration::new()
+                .fajr_angle(18.0)
+                .isha_angle(17.5)
+                .method(*self)
+                .build()
+                .unwrap(),
 
-            Self::Qatar => Configuration::new(18.0, 0.0).method(*self).isha_interval(90).done(),
+            Self::Qatar => Configuration::new()
+                .fajr_angle(18.0)
+                .isha_angle(0.0)
+                .method(*self)
+                .isha_interval(90)
+                .build()
+                .unwrap(),
 
-            Self::Singapore => Configuration::new(20.0, 18.0)
+            Self::Singapore => Configuration::new()
+                .fajr_angle(20.0)
+                .isha_angle(18.0)
                 .method(*self)
                 .method_adjustments(Adjustment::new().dhuhr(1).done())
                 .rounding(Rounding::Up)
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::Tehran => Configuration::new(17.7, 14.0).method(*self).maghrib_angle(4.5).done(),
+            Self::Tehran => Configuration::new()
+                .fajr_angle(17.7)
+                .isha_angle(14.0)
+                .method(*self)
+                .maghrib_angle(4.5)
+                .build()
+                .unwrap(),
 
-            Self::Turkey => Configuration::new(18.0, 17.0)
+            Self::Turkey => Configuration::new()
+                .fajr_angle(18.0)
+                .isha_angle(17.0)
                 .method(*self)
                 .method_adjustments(Adjustment::new().sunrise(-7).dhuhr(5).asr(4).maghrib(7).done())
-                .done(),
+                .build()
+                .unwrap(),
 
-            Self::Other => Configuration::new(0.0, 0.0).method(*self).done(),
+            Self::Other => Configuration::new()
+                .fajr_angle(0.0)
+                .isha_angle(0.0)
+                .method(*self)
+                .build()
+                .unwrap(),
         }
     }
 }
