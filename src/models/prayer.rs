@@ -22,21 +22,21 @@ pub enum Prayer {
 
 impl Prayer {
     #[must_use]
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> &'static str {
         match self {
-            Self::Fajr | Self::FajrTomorrow => String::from("Fajr"),
-            Self::Sunrise => String::from("Sunrise"),
+            Self::Fajr | Self::FajrTomorrow => "Fajr",
+            Self::Sunrise => "Sunrise",
             Self::Dhuhr => {
                 if Utc::now().weekday() == Weekday::Fri {
-                    String::from("Jumua")
+                    "Jumu'ah"
                 } else {
-                    String::from("Dhuhr")
+                    "Dhuhr"
                 }
             }
-            Self::Asr => String::from("Asr"),
-            Self::Maghrib => String::from("Maghrib"),
-            Self::Isha => String::from("Isha"),
-            Self::Qiyam => String::from("Qiyam"),
+            Self::Asr => "Asr",
+            Self::Maghrib => "Maghrib",
+            Self::Isha => "Isha",
+            Self::Qiyam => "Qiyam",
         }
     }
 }

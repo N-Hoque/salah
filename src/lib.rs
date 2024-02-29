@@ -102,7 +102,7 @@ mod tests {
         let result = PrayerSchedule::new()
             .on(date)
             .for_location(coordinates)
-            .with_configuration(params)
+            .with_parameters(params)
             .calculate();
 
         match result {
@@ -129,7 +129,7 @@ mod tests {
     fn calculate_times_using_the_builder_failure() {
         let date = Utc.ymd(2015, 7, 12);
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let result = PrayerSchedule::new().on(date).with_configuration(params).calculate();
+        let result = PrayerSchedule::new().on(date).with_parameters(params).calculate();
 
         assert!(result.is_err(), "We were expecting an error, but received data.");
     }
@@ -142,7 +142,7 @@ mod tests {
         let result = PrayerSchedule::new()
             .on(date)
             .for_location(coordinates)
-            .with_configuration(params)
+            .with_parameters(params)
             .calculate();
 
         match result {
@@ -170,7 +170,7 @@ mod tests {
         let result = PrayerSchedule::new()
             .on(Utc.ymd(2021, 1, 13))
             .for_location(Coordinates::new(1.370_844_612_058_886, 103.801_456_440_605_52))
-            .with_configuration(params)
+            .with_parameters(params)
             .calculate();
 
         match result {
@@ -207,19 +207,12 @@ mod tests {
         // It would be a good idea to get some more information on how the Fajr
         // and Isha are calculated, since that's where the biggest variance is;
         // however, the other times are within the 2 minute variance.
-        params.method_adjustments = Adjustment::new()
-            .fajr(-10)
-            .sunrise(-2)
-            .dhuhr(2)
-            .asr(1)
-            .maghrib(2)
-            .isha(4)
-            .done();
+        params.method_adjustments = TimeAdjustment::new(-10, -2, 2, 1, 2, 4);
 
         let result = PrayerSchedule::new()
             .on(Utc.ymd(2021, 1, 12))
             .for_location(Coordinates::new(-6.182_339_95, 106.842_871_54))
-            .with_configuration(params)
+            .with_parameters(params)
             .calculate();
 
         match result {
