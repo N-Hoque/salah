@@ -39,7 +39,7 @@ pub struct Parameters {
 
 impl Parameters {
     #[must_use]
-    pub fn new(fajr_angle: f64, isha_angle: f64) -> Self {
+    pub fn from_angles(fajr_angle: f64, isha_angle: f64) -> Self {
         Self {
             fajr_angle,
             maghrib_angle: 0.0,
@@ -53,6 +53,17 @@ impl Parameters {
             rounding: Rounding::Nearest,
             shafaq: Shafaq::General,
         }
+    }
+
+    #[must_use]
+    pub fn from_method(method: Method) -> Self {
+        method.parameters()
+    }
+
+    #[must_use]
+    pub const fn with_madhab(mut self, madhab: Madhab) -> Self {
+        self.madhab = madhab;
+        self
     }
 
     #[must_use]
@@ -154,11 +165,7 @@ mod tests {
 
     #[test]
     fn parameters_using_method_and_madhab() {
-        let params = Configuration::new()
-            .method(Method::NorthAmerica)
-            .madhab(Madhab::Hanafi)
-            .build()
-            .unwrap();
+        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
 
         assert_eq!(params.method, Method::NorthAmerica);
         assert_approx_eq!(f64, params.fajr_angle, 15.0, epsilon = 0.000_000_1);

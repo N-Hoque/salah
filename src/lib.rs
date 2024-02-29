@@ -76,11 +76,7 @@ mod tests {
     #[test]
     fn calculate_prayer_times() {
         let local_date = Utc.ymd(2015, 7, 12);
-        let params = Configuration::new()
-            .method(Method::NorthAmerica)
-            .madhab(Madhab::Hanafi)
-            .build()
-            .unwrap();
+        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let schedule = PrayerTimes::new(local_date, coordinates, &params);
 
@@ -101,11 +97,7 @@ mod tests {
     #[test]
     fn calculate_times_using_the_builder_successfully() {
         let date = Utc.ymd(2015, 7, 12);
-        let params = Configuration::new()
-            .method(Method::NorthAmerica)
-            .madhab(Madhab::Hanafi)
-            .build()
-            .unwrap();
+        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
             .on(date)
@@ -136,11 +128,7 @@ mod tests {
     #[test]
     fn calculate_times_using_the_builder_failure() {
         let date = Utc.ymd(2015, 7, 12);
-        let params = Configuration::new()
-            .method(Method::NorthAmerica)
-            .madhab(Madhab::Hanafi)
-            .build()
-            .unwrap();
+        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let result = PrayerSchedule::new().on(date).with_configuration(params).calculate();
 
         assert!(result.is_err(), "We were expecting an error, but received data.");
@@ -149,11 +137,7 @@ mod tests {
     #[test]
     fn calculate_qiyam_times() {
         let date = Utc.ymd(2015, 7, 12);
-        let params = Configuration::new()
-            .method(Method::NorthAmerica)
-            .madhab(Madhab::Hanafi)
-            .build()
-            .unwrap();
+        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
             .on(date)
@@ -179,11 +163,7 @@ mod tests {
 
     #[test]
     fn calculate_times_for_singapore() {
-        let mut params = Configuration::new()
-            .method(Method::Singapore)
-            .madhab(Madhab::Shafi)
-            .build()
-            .unwrap();
+        let mut params = Parameters::from_method(Method::Singapore).with_madhab(Madhab::Shafi);
 
         params.high_latitude_rule = HighLatitudeRule::MiddleOfTheNight;
 
@@ -217,11 +197,7 @@ mod tests {
 
     #[test]
     fn calculate_times_for_jakarta() {
-        let mut params = Configuration::new()
-            .method(Method::Egyptian)
-            .madhab(Madhab::Shafi)
-            .build()
-            .unwrap();
+        let mut params = Parameters::from_method(Method::Egyptian).with_madhab(Madhab::Shafi);
 
         // The adjustment below are based on the prayer times that are provided
         // on the website (https://www.jadwalsholat.org/). I don't know the exact
