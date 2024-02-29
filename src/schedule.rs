@@ -123,13 +123,13 @@ impl PrayerTimes {
 
     #[must_use]
     pub fn time_remaining(&self) -> (u32, u32) {
-        let next_time = self.time(self.next());
         let mut now = Utc::now();
         if self.next() == Prayer::FajrTomorrow {
             // If we're waiting for FajrTomorrow, we need to push the day
             // forward by 1 so that the time keeping is corrected
             now = now.checked_add_days(Days::new(1)).unwrap();
         }
+        let next_time = self.time(self.next());
         let now_to_next = next_time.signed_duration_since(now).num_seconds() as f64;
         let whole: f64 = now_to_next / 3600.0;
         let fract = whole.fract();
