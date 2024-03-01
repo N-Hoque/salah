@@ -9,10 +9,11 @@ use super::{
     parameters::{Configuration, Parameters},
     rounding::Rounding,
 };
+use serde::{Deserialize, Serialize};
 
 /// Provides preset configuration for a few authorities
 /// for calculating prayer times.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Method {
     /// Muslim World League. Standard Fajr time with an angle of 18°.
     /// Earlier Isha time with an angle of 17°.

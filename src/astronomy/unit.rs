@@ -7,6 +7,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike};
+use serde::{Deserialize, Serialize};
 
 use crate::{astronomy::ops, models::rounding::Rounding};
 
@@ -183,7 +184,7 @@ impl Div for Angle {
 
 /// The latitude and longitude associated with a location.
 /// Both latiude and longitude values are specified in degrees.
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone, Deserialize, Serialize)]
 pub struct Coordinates {
     pub latitude: f64,
     pub longitude: f64,

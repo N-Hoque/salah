@@ -4,12 +4,13 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
+use serde::{Deserialize, Serialize};
 use std::default::Default;
 
 /// Time adjustment for all prayer times.
 /// The value is specified in *minutes* and
 /// can be either positive or negative.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, derive_builder::Builder)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, derive_builder::Builder)]
 #[builder(name = "Adjustment")]
 pub struct TimeAdjustment {
     #[builder(default)]

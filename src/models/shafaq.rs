@@ -7,7 +7,9 @@
 /// Shafaq is the twilight in the sky. Different madhabs define the appearance of
 /// twilight differently. These values are used by the `MoonsightingComittee` method
 /// for the different ways to calculate Isha.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Shafaq {
     /// General is a combination of Ahmer and Abyad.
     General,

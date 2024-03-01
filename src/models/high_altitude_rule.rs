@@ -5,9 +5,11 @@
 //
 
 use crate::astronomy::unit::Coordinates;
+use serde::{Deserialize, Serialize};
 
 /// Rule for approximating Fajr and Isha at high latitudes
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum HighLatitudeRule {
     /// Fajr won't be earlier than the midpoint of the night and isha
     /// won't be later than the midpoint of the night. This is the default

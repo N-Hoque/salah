@@ -11,16 +11,14 @@ use super::{
     rounding::Rounding, shafaq::Shafaq,
 };
 
+use serde::{Deserialize, Serialize};
+
 /// Settings that are used for determining the
 /// the correct prayer time.
 ///
 /// It is recommended to use [Configuration](struct.Configuration.html) to build
 /// the parameters that are need.
-/// A builder for the the [Parameters](struct.Parameters.html).
-///
-/// It is recommended that this is used for setting
-/// all parameters that are needed.
-#[derive(Clone, derive_builder::Builder)]
+#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize, derive_builder::Builder)]
 #[builder(name = "Configuration")]
 pub struct Parameters {
     pub method: Method,
