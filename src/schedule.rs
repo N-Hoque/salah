@@ -48,17 +48,15 @@ impl std::fmt::Display for PrayerTimes {
                     self.dhuhr.time().format("%H:%M"),
                     self.asr.time().format("%H:%M"),
                     self.maghrib.time().format("%H:%M"),
-                    self.isha.time().format("%H:%M")
+                    self.isha.time().format("%H:%M"),
                 ],
-            ],
-            tabled::row![
                 tabled::col!["Current Time", "Current Prayer", "Next Prayer", "Time Left"],
                 tabled::col![
                     chrono::Utc::now().time().format("%H:%M:%S"),
                     self.current(),
                     self.next(),
-                    format!("{hours}h {minutes}m")
-                ],
+                    format!("{hours}h {minutes}m"),
+                ]
             ]
         ];
 
