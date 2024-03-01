@@ -102,6 +102,11 @@ impl PrayerTimes {
     }
 
     #[must_use]
+    pub const fn midnight(&self) -> DateTime<Utc> {
+        self.midnight
+    }
+
+    #[must_use]
     pub fn next(&self) -> Prayer {
         match self.current() {
             Prayer::Fajr => Prayer::Sunrise,
