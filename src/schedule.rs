@@ -40,7 +40,7 @@ impl std::fmt::Display for PrayerTimes {
         let (hours, minutes) = self.time_remaining();
 
         let prayer_table = tabled::col![
-            self.fajr.date_naive().format("%A, %-d %B, %C%y"),
+            chrono::Utc::now().format("%A, %-d %B, %C%y %H:%M:%S"),
             tabled::row![
                 tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
                 tabled::col![
@@ -50,13 +50,13 @@ impl std::fmt::Display for PrayerTimes {
                     self.maghrib.time().format("%H:%M"),
                     self.isha.time().format("%H:%M"),
                 ],
-                tabled::col!["Current Time", "Current Prayer", "Next Prayer", "Time Left", "Midnight"],
+                tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
                 tabled::col![
-                    chrono::Utc::now().time().format("%H:%M:%S"),
                     self.current(),
                     self.next(),
                     format!("{hours}h {minutes}m"),
                     self.midnight().format("%H:%M"),
+                    self.qiyam
                 ]
             ]
         ];
