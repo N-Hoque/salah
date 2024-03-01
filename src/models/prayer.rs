@@ -51,7 +51,7 @@ mod tests {
         assert_eq!(Prayer::Sunrise.name(), "Sunrise");
 
         if Utc::now().weekday() == Weekday::Fri {
-            assert_eq!(Prayer::Dhuhr.name(), "Jumua");
+            assert_eq!(Prayer::Dhuhr.name(), "Jumu'ah");
         } else {
             assert_eq!(Prayer::Dhuhr.name(), "Dhuhr");
         }

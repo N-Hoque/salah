@@ -321,12 +321,21 @@ impl PrayerSchedule {
         }
     }
 
-    pub fn on<Tz: TimeZone>(&mut self, date: &DateTime<Tz>) -> &mut Self {
+    #[must_use]
+    pub fn today() -> Self {
+        Self {
+            date: Some(chrono::Utc::now()),
+            coordinates: None,
+            params: None,
+        }
+    }
+
+    pub fn with_date<Tz: TimeZone>(&mut self, date: &DateTime<Tz>) -> &mut Self {
         self.date = Some(date.to_utc());
         self
     }
 
-    pub fn for_location(&mut self, location: Coordinates) -> &mut Self {
+    pub fn with_coordinates(&mut self, location: Coordinates) -> &mut Self {
         self.coordinates = Some(location);
         self
     }
@@ -336,7 +345,7 @@ impl PrayerSchedule {
         self
     }
 
-    pub fn calculate(&self) -> Result<PrayerTimes, String> {
+    pub fn build(&self) -> Result<PrayerTimes, String> {
         if let (Some(date), Some(coordinates), Some(params)) = (self.date, self.coordinates, &self.params) {
             Ok(PrayerTimes::new(&date, coordinates, params))
         } else {
@@ -443,10 +452,10 @@ mod tests {
         let params = Parameters::from_method(Method::MoonsightingCommittee).with_madhab(Madhab::Shafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
         let result = PrayerSchedule::new()
-            .on(&date)
-            .for_location(coordinates)
+            .with_date(&date)
+            .with_coordinates(coordinates)
             .with_parameters(params)
-            .calculate();
+            .build();
 
         match result {
             Ok(schedule) => {
@@ -480,10 +489,10 @@ mod tests {
         let params = Parameters::from_method(Method::MoonsightingCommittee).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(59.9094, 10.7349);
         let result = PrayerSchedule::new()
-            .on(&date)
-            .for_location(coordinates)
+            .with_date(&date)
+            .with_coordinates(coordinates)
             .with_parameters(params)
-            .calculate();
+            .build();
 
         match result {
             Ok(schedule) => {
