@@ -55,8 +55,8 @@ impl std::fmt::Display for PrayerTimes {
                     self.current(),
                     self.next(),
                     format!("{hours}h {minutes}m"),
-                    self.midnight().format("%H:%M"),
-                    self.qiyam
+                    self.midnight.format("%H:%M"),
+                    self.qiyam.format("%H:%M")
                 ]
             ]
         ];
@@ -129,11 +129,6 @@ impl PrayerTimes {
     #[must_use]
     pub fn current(&self) -> Prayer {
         self.current_time(&Utc::now())
-    }
-
-    #[must_use]
-    pub const fn midnight(&self) -> DateTime<Utc> {
-        self.midnight
     }
 
     #[must_use]
