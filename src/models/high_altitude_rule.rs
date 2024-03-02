@@ -4,8 +4,9 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use crate::astronomy::unit::Coordinates;
 use serde::{Deserialize, Serialize};
+
+use crate::astronomy::unit::Coordinates;
 
 /// Rule for approximating Fajr and Isha at high latitudes
 

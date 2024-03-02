@@ -4,12 +4,13 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
+use serde::{Deserialize, Serialize};
+
 use super::{
     adjustments::Adjustment,
     parameters::{Configuration, Parameters},
     rounding::Rounding,
 };
-use serde::{Deserialize, Serialize};
 
 /// Provides preset configuration for a few authorities
 /// for calculating prayer times.

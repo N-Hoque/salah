@@ -4,8 +4,9 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use serde::{Deserialize, Serialize};
 use std::default::Default;
+
+use serde::{Deserialize, Serialize};
 
 /// Time adjustment for all prayer times.
 ///

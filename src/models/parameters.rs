@@ -4,14 +4,13 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use crate::Prayer;
+use serde::{Deserialize, Serialize};
 
 use super::{
     adjustments::TimeAdjustment, high_altitude_rule::HighLatitudeRule, madhab::Madhab, method::Method,
     rounding::Rounding, shafaq::Shafaq,
 };
-
-use serde::{Deserialize, Serialize};
+use crate::Prayer;
 
 const ONE_HALF: f64 = 0.5;
 const ONE_SEVENTH: f64 = 1.0 / 7.0;
