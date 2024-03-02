@@ -4,7 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use chrono::{Datelike, Utc, Weekday};
+use chrono::{Datelike, Local, Weekday};
 
 /// Prayers and particular times of day
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,7 +43,7 @@ impl Event {
             Self::Fajr | Self::FajrTomorrow => "Fajr",
             Self::Sunrise => "Sunrise",
             Self::Dhuhr => {
-                if Utc::now().weekday() == Weekday::Fri {
+                if Local::now().weekday() == Weekday::Fri {
                     "Jumu'ah"
                 } else {
                     "Dhuhr"
@@ -67,7 +67,7 @@ mod tests {
         assert_eq!(Event::Fajr.name(), "Fajr");
         assert_eq!(Event::Sunrise.name(), "Sunrise");
 
-        if Utc::now().weekday() == Weekday::Fri {
+        if Local::now().weekday() == Weekday::Fri {
             assert_eq!(Event::Dhuhr.name(), "Jumu'ah");
         } else {
             assert_eq!(Event::Dhuhr.name(), "Dhuhr");

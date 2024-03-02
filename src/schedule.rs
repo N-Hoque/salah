@@ -41,7 +41,7 @@ impl std::fmt::Display for PrayerTimes {
 
         let notice = if self.sunrise.signed_duration_since(current_time).num_minutes() <= 15 {
             "NOTE: CANNOT OFFER VOLUNTARY PRAYERS AT THIS TIME. PLEASE WAIT UNTIL SUN HAS FULLY RISEN"
-        } else if self.maghrib.signed_duration_since(current_time).num_minutes() < -20 {
+        } else if self.maghrib.signed_duration_since(current_time).num_minutes() > -20 {
             "NOTE: CANNOT OFFER PRAYERS AT THIS TIME. PLEASE WAIT UNTIL SUN HAS FULLY SET"
         } else {
             ""
@@ -150,8 +150,8 @@ impl PrayerTimes {
             Some(Event::Asr) => Event::Maghrib,
             Some(Event::Maghrib) => Event::Isha,
             Some(Event::Isha) => Event::Midnight,
-            Some(Event::Midnight) => Event::Qiyam,
-            Some(Event::Qiyam) | None => Event::FajrTomorrow,
+            Some(Event::Midnight) | None => Event::Qiyam,
+            Some(Event::Qiyam) => Event::FajrTomorrow,
         }
     }
 
