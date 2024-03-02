@@ -6,21 +6,21 @@
 
 use chrono::{Datelike, Utc, Weekday};
 
-/// Names of all obligatory prayers,
-/// sunrise, and Qiyam.
+/// Prayers and particular times of day
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Prayer {
+pub enum Event {
     Fajr,
     Sunrise,
     Dhuhr,
     Asr,
     Maghrib,
     Isha,
+    Midnight,
     Qiyam,
     FajrTomorrow,
 }
 
-impl std::fmt::Display for Prayer {
+impl std::fmt::Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Fajr => write!(f, "Fajr"),
@@ -29,13 +29,14 @@ impl std::fmt::Display for Prayer {
             Self::Asr => write!(f, "Asr"),
             Self::Maghrib => write!(f, "Maghrib"),
             Self::Isha => write!(f, "Isha"),
+            Self::Midnight => write!(f, "Midnight"),
             Self::Qiyam => write!(f, "Qiyam"),
             Self::FajrTomorrow => write!(f, "FajrTomorrow"),
         }
     }
 }
 
-impl Prayer {
+impl Event {
     #[must_use]
     pub fn name(&self) -> &'static str {
         match self {
@@ -51,6 +52,7 @@ impl Prayer {
             Self::Asr => "Asr",
             Self::Maghrib => "Maghrib",
             Self::Isha => "Isha",
+            Self::Midnight => "Midnight",
             Self::Qiyam => "Qiyam",
         }
     }
@@ -62,18 +64,18 @@ mod tests {
 
     #[test]
     fn prayer_name_for_fajr_en_transliteration() {
-        assert_eq!(Prayer::Fajr.name(), "Fajr");
-        assert_eq!(Prayer::Sunrise.name(), "Sunrise");
+        assert_eq!(Event::Fajr.name(), "Fajr");
+        assert_eq!(Event::Sunrise.name(), "Sunrise");
 
         if Utc::now().weekday() == Weekday::Fri {
-            assert_eq!(Prayer::Dhuhr.name(), "Jumu'ah");
+            assert_eq!(Event::Dhuhr.name(), "Jumu'ah");
         } else {
-            assert_eq!(Prayer::Dhuhr.name(), "Dhuhr");
+            assert_eq!(Event::Dhuhr.name(), "Dhuhr");
         }
 
-        assert_eq!(Prayer::Asr.name(), "Asr");
-        assert_eq!(Prayer::Maghrib.name(), "Maghrib");
-        assert_eq!(Prayer::Isha.name(), "Isha");
-        assert_eq!(Prayer::Qiyam.name(), "Qiyam");
+        assert_eq!(Event::Asr.name(), "Asr");
+        assert_eq!(Event::Maghrib.name(), "Maghrib");
+        assert_eq!(Event::Isha.name(), "Isha");
+        assert_eq!(Event::Qiyam.name(), "Qiyam");
     }
 }

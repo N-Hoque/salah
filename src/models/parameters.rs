@@ -4,7 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use crate::Prayer;
+use crate::Event;
 
 use super::{
     adjustments::TimeAdjustment, high_altitude_rule::HighLatitudeRule, madhab::Madhab, method::Method,
@@ -74,14 +74,14 @@ impl Parameters {
     }
 
     #[must_use]
-    pub const fn time_adjustments(&self, prayer: Prayer) -> i64 {
+    pub const fn time_adjustments(&self, prayer: Event) -> i64 {
         match prayer {
-            Prayer::Fajr => self.adjustments.fajr + self.method_adjustments.fajr,
-            Prayer::Sunrise => self.adjustments.sunrise + self.method_adjustments.sunrise,
-            Prayer::Dhuhr => self.adjustments.dhuhr + self.method_adjustments.dhuhr,
-            Prayer::Asr => self.adjustments.asr + self.method_adjustments.asr,
-            Prayer::Maghrib => self.adjustments.maghrib + self.method_adjustments.maghrib,
-            Prayer::Isha => self.adjustments.isha + self.method_adjustments.isha,
+            Event::Fajr => self.adjustments.fajr + self.method_adjustments.fajr,
+            Event::Sunrise => self.adjustments.sunrise + self.method_adjustments.sunrise,
+            Event::Dhuhr => self.adjustments.dhuhr + self.method_adjustments.dhuhr,
+            Event::Asr => self.adjustments.asr + self.method_adjustments.asr,
+            Event::Maghrib => self.adjustments.maghrib + self.method_adjustments.maghrib,
+            Event::Isha => self.adjustments.isha + self.method_adjustments.isha,
             _ => 0,
         }
     }
