@@ -164,7 +164,7 @@ impl PrayerTimes {
 
     #[must_use]
     pub fn time_remaining(&self) -> (u32, u32) {
-        let mut now = Utc::now();
+        let mut now = Local::now();
         if self.next() == Event::FajrTomorrow {
             // If we're waiting for FajrTomorrow, we need to push the day
             // forward by 1 so that the time keeping is corrected
@@ -358,7 +358,7 @@ impl PrayerSchedule {
     #[must_use]
     pub fn today() -> Self {
         Self {
-            date: Some(chrono::Utc::now()),
+            date: Some(chrono::Local::now().to_utc()),
             coordinates: None,
             params: None,
         }
