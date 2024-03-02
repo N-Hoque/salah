@@ -9,7 +9,7 @@
 //! This module provides the main objects that are used for calculating
 //! the prayer times.
 
-use chrono::{DateTime, Datelike, Days, Duration, Local, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Days, Duration, Local, TimeZone, Timelike, Utc};
 
 use crate::{
     astronomy::{
@@ -165,7 +165,7 @@ impl PrayerTimes {
     #[must_use]
     pub fn time_remaining(&self) -> (u32, u32) {
         let mut now = Local::now();
-        if self.next() == Event::FajrTomorrow {
+        if now.num_seconds_from_midnight() > 0 {
             // If we're waiting for FajrTomorrow, we need to push the day
             // forward by 1 so that the time keeping is corrected
             now = now.checked_add_days(Days::new(1)).unwrap();
