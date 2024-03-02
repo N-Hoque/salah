@@ -20,8 +20,6 @@ use crate::{
     models::{method::Method, parameters::Parameters, prayer::Prayer, rounding::Rounding},
 };
 
-/// A data struct to hold the timing for all
-/// prayers.
 #[derive(Clone)]
 pub struct PrayerTimes {
     fajr: DateTime<Utc>,
