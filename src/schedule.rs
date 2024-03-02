@@ -157,7 +157,7 @@ impl PrayerTimes {
             Some(Event::Maghrib) => Event::Isha,
             Some(Event::Isha) => Event::Midnight,
             Some(Event::Midnight) => Event::Qiyam,
-            None if self.midnight.signed_duration_since(Local::now()).num_seconds() < 0 => Event::Qiyam,
+            None if self.qiyam.signed_duration_since(Local::now()).num_seconds() > 0 => Event::Qiyam,
             None | Some(Event::Qiyam) => Event::FajrTomorrow,
         }
     }
@@ -187,6 +187,8 @@ impl PrayerTimes {
             Some(Event::FajrTomorrow)
         } else if self.qiyam.signed_duration_since(time).num_seconds() <= 0 {
             Some(Event::Qiyam)
+        } else if self.midnight.signed_duration_since(time).num_seconds() <= 0 {
+            Some(Event::Midnight)
         } else if self.isha.signed_duration_since(time).num_seconds() <= 0 {
             Some(Event::Isha)
         } else if self.maghrib.signed_duration_since(time).num_seconds() <= 0 {
