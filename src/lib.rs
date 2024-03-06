@@ -15,7 +15,7 @@
 //!
 //! let new_york_city = Coordinates::new(40.7128, -74.0059);
 //! let params        = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-//! let prayers       = PrayerSchedule::today()
+//! let prayers       = PrayerSchedule::<Utc>::now()
 //!                       .with_coordinates(new_york_city)
 //!                       .with_parameters(params)
 //!                       .build()

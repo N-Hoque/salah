@@ -400,6 +400,28 @@ impl<Tz: TimeZone> PrayerSchedule<Tz> {
     }
 }
 
+impl PrayerSchedule<Local> {
+    #[must_use]
+    pub fn now() -> Self {
+        Self {
+            date: Some(Local::now()),
+            coordinates: None,
+            params: None,
+        }
+    }
+}
+
+impl PrayerSchedule<Utc> {
+    #[must_use]
+    pub fn now() -> Self {
+        Self {
+            date: Some(Utc::now()),
+            coordinates: None,
+            params: None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::{TimeZone, Utc};
