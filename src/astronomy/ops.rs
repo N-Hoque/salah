@@ -394,7 +394,10 @@ pub fn season_adjusted_evening_twilight<Tz: TimeZone>(
 pub fn days_since_solstice(day_of_year: u32, year: u32, latitude: f64) -> u32 {
     let days_in_year = if is_leap_year(year) { 366 } else { 365 };
 
-    if latitude >= 0.0 {
+    if latitude < 0.0 {
+        let southern_offset = if is_leap_year(year) { 173 } else { 172 };
+        (day_of_year - southern_offset) + days_in_year
+    } else {
         let northern_offset = 10;
         let lapsed_days = day_of_year + northern_offset;
 
@@ -403,9 +406,6 @@ pub fn days_since_solstice(day_of_year: u32, year: u32, latitude: f64) -> u32 {
         } else {
             lapsed_days
         }
-    } else {
-        let southern_offset = if is_leap_year(year) { 173 } else { 172 };
-        (day_of_year - southern_offset) + days_in_year
     }
 }
 

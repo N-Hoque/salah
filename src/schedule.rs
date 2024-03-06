@@ -145,17 +145,48 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         }
     }
 
+    pub fn display(&self, current_time: &DateTime<Tz>)
+    where
+        Tz::Offset: std::fmt::Display,
+    {
+        let (hours, minutes) = self.time_remaining(current_time);
+
+        let prayer_table = tabled::col![
+            current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
+            tabled::row![
+                tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
+                tabled::col![
+                    self.fajr.time().format("%H:%M"),
+                    self.dhuhr.time().format("%H:%M"),
+                    self.asr.time().format("%H:%M"),
+                    self.maghrib.time().format("%H:%M"),
+                    self.isha.time().format("%H:%M"),
+                ],
+                tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
+                tabled::col![
+                    self.current(current_time),
+                    self.next(current_time),
+                    format!("{hours}h {minutes}m"),
+                    self.midnight.time().format("%H:%M"),
+                    self.qiyam.time().format("%H:%M")
+                ]
+            ]
+        ];
+
+        println!("{prayer_table}");
+    }
+
     #[must_use]
-    pub fn time(&self, prayer: Prayer) -> DateTime<Tz> {
+    pub const fn time(&self, prayer: Prayer) -> &DateTime<Tz> {
         match prayer {
-            Prayer::Fajr => self.fajr.clone(),
-            Prayer::Sunrise => self.sunrise.clone(),
-            Prayer::Dhuhr => self.dhuhr.clone(),
-            Prayer::Asr => self.asr.clone(),
-            Prayer::Maghrib => self.maghrib.clone(),
-            Prayer::Isha => self.isha.clone(),
-            Prayer::Qiyam => self.qiyam.clone(),
-            Prayer::FajrTomorrow => self.fajr_tomorrow.clone(),
+            Prayer::Fajr => &self.fajr,
+            Prayer::Sunrise => &self.sunrise,
+            Prayer::Dhuhr => &self.dhuhr,
+            Prayer::Asr => &self.asr,
+            Prayer::Maghrib => &self.maghrib,
+            Prayer::Isha => &self.isha,
+            Prayer::Qiyam => &self.qiyam,
+            Prayer::FajrTomorrow => &self.fajr_tomorrow,
         }
     }
 
@@ -186,7 +217,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             now = now.checked_add_days(Days::new(1)).unwrap();
         }
         let next_time = self.time(self.next(time));
-        let now_to_next = next_time.signed_duration_since(now).num_seconds() as f64;
+        let now_to_next = next_time.clone().signed_duration_since(now).num_seconds() as f64;
         let whole: f64 = now_to_next / 3600.0;
         let fract = whole.fract();
         let hours = whole.trunc() as u32;
