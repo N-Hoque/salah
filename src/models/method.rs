@@ -75,6 +75,7 @@ pub enum Method {
 
 impl Method {
     #[must_use]
+    #[allow(clippy::too_many_lines)]
     pub fn parameters(&self) -> Parameters {
         match self {
             Self::MuslimWorldLeague => Configuration::new()

@@ -62,15 +62,15 @@ impl<Tz: TimeZone> Stride for DateTime<Tz> {
                 let adjusted_seconds = i64::from(seconds);
 
                 if rounded == 1 {
-                    adjusted + Duration::seconds(60 - adjusted_seconds)
+                    adjusted + Duration::try_seconds(60 - adjusted_seconds).unwrap()
                 } else {
-                    adjusted + Duration::seconds(-adjusted_seconds)
+                    adjusted + Duration::try_seconds(-adjusted_seconds).unwrap()
                 }
             }
             Rounding::Up => {
                 let adjusted_seconds = i64::from(seconds);
 
-                adjusted + Duration::seconds(60 - adjusted_seconds)
+                adjusted + Duration::try_seconds(60 - adjusted_seconds).unwrap()
             }
             Rounding::None => adjusted,
         }
@@ -78,7 +78,9 @@ impl<Tz: TimeZone> Stride for DateTime<Tz> {
 
     fn adjust_time(&self, minutes: i64) -> Self {
         let some_date = self.clone();
-        some_date.checked_add_signed(Duration::seconds(minutes * 60)).unwrap()
+        some_date
+            .checked_add_signed(Duration::try_seconds(minutes * 60).unwrap())
+            .unwrap()
     }
 
     fn next_date(&self, fwd: bool) -> Self {

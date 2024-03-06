@@ -9,9 +9,7 @@
 //! This module provides the main objects that are used for calculating
 //! the prayer times.
 
-use std::convert::AsRef;
-
-use chrono::{DateTime, Datelike, Days, Duration, Local, Offset, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Days, Duration, Local, TimeZone, Utc};
 
 use crate::{
     astronomy::{
@@ -103,7 +101,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     #[must_use]
     pub fn new(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
         let tomorrow = date.tomorrow();
-        let solar_time = SolarTime::new(&date, coordinates);
+        let solar_time = SolarTime::new(date, coordinates);
         let solar_time_tomorrow = SolarTime::new(&tomorrow, coordinates);
 
         let asr = solar_time.afternoon(parameters.madhab.shadow().into());
@@ -112,8 +110,8 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             .sunrise
             .signed_duration_since(&solar_time.sunset);
 
-        let fajr = Self::calculate_fajr(parameters, &solar_time, night, coordinates, &date)
-            .rounded_minute(parameters.rounding);
+        let fajr =
+            Self::calculate_fajr(parameters, &solar_time, night, coordinates, date).rounded_minute(parameters.rounding);
         let sunrise = solar_time
             .sunrise
             .adjust_time(parameters.time_adjustments(Prayer::Sunrise))
@@ -128,7 +126,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         let maghrib = ops::adjust_time(&solar_time.sunset, parameters.time_adjustments(Prayer::Maghrib))
             .rounded_minute(parameters.rounding);
         let isha =
-            Self::calculate_isha(parameters, solar_time, night, coordinates, &date).rounded_minute(parameters.rounding);
+            Self::calculate_isha(parameters, solar_time, night, coordinates, date).rounded_minute(parameters.rounding);
 
         // Calculate the middle of the night and qiyam times
         let (midnight, qiyam, fajr_tomorrow) =
@@ -175,7 +173,6 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             Prayer::Asr => Prayer::Maghrib,
             Prayer::Maghrib => Prayer::Isha,
             Prayer::Isha => Prayer::Qiyam,
-            Prayer::Qiyam => Prayer::FajrTomorrow,
             _ => Prayer::FajrTomorrow,
         }
     }
@@ -235,7 +232,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             solar_time
                 .clone()
                 .sunrise
-                .checked_add_signed(Duration::seconds(-night_fraction))
+                .checked_add_signed(Duration::try_seconds(-night_fraction).unwrap())
                 .unwrap()
         } else {
             // Nothing to do.
@@ -257,7 +254,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             solar_time
                 .clone()
                 .sunrise
-                .checked_add_signed(Duration::seconds(-night_fraction as i64))
+                .checked_add_signed(Duration::try_seconds(-night_fraction as i64).unwrap())
                 .unwrap()
         };
 
@@ -277,9 +274,8 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     ) -> DateTime<Tz> {
         if parameters.isha_interval > 0 {
             solar_time
-                .clone()
                 .sunset
-                .checked_add_signed(Duration::seconds(i64::from(parameters.isha_interval * 60)))
+                .checked_add_signed(Duration::try_seconds(i64::from(parameters.isha_interval * 60)).unwrap())
                 .unwrap()
         } else {
             let safe_isha = if parameters.method == Method::MoonsightingCommittee {
@@ -299,7 +295,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
                 solar_time
                     .clone()
                     .sunset
-                    .checked_add_signed(Duration::seconds(night_fraction as i64))
+                    .checked_add_signed(Duration::try_seconds(night_fraction as i64).unwrap())
                     .unwrap()
             };
 
@@ -307,9 +303,8 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
                 // special case for moonsighting committee above latitude 55
                 let night_fraction = night.num_seconds() / 7;
                 solar_time
-                    .clone()
                     .sunset
-                    .checked_add_signed(Duration::seconds(night_fraction))
+                    .checked_add_signed(Duration::try_seconds(night_fraction).unwrap())
                     .unwrap()
             } else {
                 solar_time.time_for_solar_angle(Angle::new(-parameters.isha_angle), true)
@@ -335,7 +330,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         let solar_time_tomorrow = SolarTime::new(&tomorrow, coordinates);
         let night = solar_time_tomorrow.sunrise.signed_duration_since(&solar_time.sunset);
 
-        let tomorrow_fajr = Self::calculate_fajr(parameters, &solar_time, night, coordinates, prayer_date);
+        let tomorrow_fajr = Self::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date);
         let night_duration = tomorrow_fajr
             .clone()
             .signed_duration_since(current_maghrib.clone())
@@ -344,12 +339,12 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         let last_third_portion = (night_duration * (2.0 / 3.0)) as i64;
         let middle_of_night = current_maghrib
             .clone()
-            .checked_add_signed(Duration::seconds(middle_night_portion))
+            .checked_add_signed(Duration::try_seconds(middle_night_portion).unwrap())
             .unwrap()
             .rounded_minute(Rounding::Nearest);
         let last_third_of_night = current_maghrib
             .clone()
-            .checked_add_signed(Duration::seconds(last_third_portion))
+            .checked_add_signed(Duration::try_seconds(last_third_portion).unwrap())
             .unwrap()
             .rounded_minute(Rounding::Nearest);
 

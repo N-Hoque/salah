@@ -4,7 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, TimeZone};
 
 use crate::{
     astronomy::unit::{Angle, Coordinates, Normalize, Stride},
@@ -300,7 +300,7 @@ pub fn season_adjusted_morning_twilight<Tz: TimeZone>(
     let rounded_adjustment = (adjustment * -60.0).round() as i64;
     sunrise
         .clone()
-        .checked_add_signed(Duration::seconds(rounded_adjustment))
+        .checked_add_signed(Duration::try_seconds(rounded_adjustment).unwrap())
         .unwrap()
 }
 
@@ -383,7 +383,7 @@ pub fn season_adjusted_evening_twilight<Tz: TimeZone>(
     let rounded_adjustment = (adjustment * 60.0).round() as i64;
     let adjusted_date = sunset
         .clone()
-        .checked_add_signed(Duration::seconds(rounded_adjustment))
+        .checked_add_signed(Duration::try_seconds(rounded_adjustment).unwrap())
         .unwrap();
 
     adjusted_date.rounded_minute(Rounding::Nearest)
@@ -411,7 +411,7 @@ pub fn days_since_solstice(day_of_year: u32, year: u32, latitude: f64) -> u32 {
 
 pub fn adjust_time<Tz: TimeZone>(date: &DateTime<Tz>, minutes: i64) -> DateTime<Tz> {
     date.clone()
-        .checked_add_signed(Duration::seconds(minutes * 60))
+        .checked_add_signed(Duration::try_seconds(minutes * 60).unwrap())
         .unwrap()
 }
 

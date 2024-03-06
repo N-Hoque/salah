@@ -4,7 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
-use chrono::{DateTime, Datelike, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Days, TimeZone, Utc};
 
 use crate::astronomy::{
     ops,
@@ -138,9 +138,9 @@ impl<Tz: TimeZone> SolarTime<Tz> {
             date: date.clone(),
             observer: coordinates,
             solar,
-            transit: Self::setting_hour(transit_time, &date).unwrap(),
-            sunrise: Self::setting_hour(sunrise_time, &date).unwrap(),
-            sunset: Self::setting_hour(sunset_time, &date).unwrap(),
+            transit: Self::setting_hour(transit_time, date).unwrap(),
+            sunrise: Self::setting_hour(sunrise_time, date).unwrap(),
+            sunset: Self::setting_hour(sunset_time, date).unwrap(),
             prev_solar,
             next_solar,
             approx_transit,
