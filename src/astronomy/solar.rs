@@ -174,17 +174,37 @@ impl<Tz: TimeZone> SolarTime<Tz> {
         self.time_for_solar_angle(angle, true)
     }
 
-    fn setting_hour(value: f64, date: &DateTime<Tz>) -> Option<DateTime<Tz>> {
-        if value.is_normal() {
-            let calculated_hours = value.floor();
-            let calculated_minutes = ((value - calculated_hours) * 60.0).floor();
-            let calculated_seconds = ((value - (calculated_hours + calculated_minutes / 60.0)) * 60.0 * 60.0).floor();
+    fn setting_hour(hours: f64, date: &DateTime<Tz>) -> Option<DateTime<Tz>> {
+        if hours.is_normal() {
+            let rounded_hours = hours.floor();
+            let rounded_minutes = ((hours - rounded_hours) * 60.0).floor();
+            let rounded_seconds = ((hours - (rounded_hours + rounded_minutes / 60.0)) * 3600.0).floor();
 
-            let (adjusted_hour, adjusted_date) = Self::hour_adjustment(calculated_hours, date);
+            let (mut adjusted_hour, mut adjusted_date) = Self::hour_adjustment(rounded_hours, date);
 
             // Round to the nearest minute
-            let adjusted_mins = (calculated_minutes + calculated_seconds / 60.0).round() as u32;
-            let adjusted_secs: u32 = 0;
+            let mut adjusted_mins = (rounded_minutes + rounded_seconds / 60.0).round() as u32;
+            let mut adjusted_secs: u32 = 0;
+
+            // Correct adjustments if overflowing units
+            // TODO: Determine if above calculations can be modified to ensure
+            // units do not overflow
+            if adjusted_secs >= 60 {
+                adjusted_mins += adjusted_secs / 60;
+                adjusted_secs %= 60;
+            }
+
+            if adjusted_mins >= 60 {
+                adjusted_hour += adjusted_mins / 60;
+                adjusted_mins %= 60;
+            }
+
+            if adjusted_hour >= 24 {
+                adjusted_date = adjusted_date
+                    .checked_add_days(Days::new(u64::from(adjusted_hour) / 24))
+                    .unwrap();
+                adjusted_hour %= 24;
+            }
 
             let adjusted = Utc
                 .with_ymd_and_hms(
