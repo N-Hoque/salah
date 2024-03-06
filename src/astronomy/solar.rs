@@ -69,24 +69,22 @@ impl SolarCoordinates {
 }
 
 // Solar Time
-#[derive(Debug, Copy, Clone)]
-pub struct SolarTime {
-    date: DateTime<Utc>,
+#[derive(Debug, Clone)]
+pub struct SolarTime<Tz: TimeZone> {
+    date: DateTime<Tz>,
     observer: Coordinates,
     solar: SolarCoordinates,
-    pub transit: DateTime<Utc>,
-    pub sunrise: DateTime<Utc>,
-    pub sunset: DateTime<Utc>,
+    pub transit: DateTime<Tz>,
+    pub sunrise: DateTime<Tz>,
+    pub sunset: DateTime<Tz>,
     prev_solar: SolarCoordinates,
     next_solar: SolarCoordinates,
     approx_transit: f64,
 }
 
-impl SolarTime {
-    pub fn new<Tz: TimeZone>(date: &DateTime<Tz>, coordinates: Coordinates) -> Self {
+impl<Tz: TimeZone> SolarTime<Tz> {
+    pub fn new(date: &DateTime<Tz>, coordinates: Coordinates) -> Self {
         // All calculation need to occur at 0h0m UTC
-        let date = date.to_utc();
-
         let today = Utc
             .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
             .unwrap();
@@ -137,7 +135,7 @@ impl SolarTime {
         );
 
         Self {
-            date,
+            date: date.clone(),
             observer: coordinates,
             solar,
             transit: Self::setting_hour(transit_time, &date).unwrap(),
@@ -149,7 +147,7 @@ impl SolarTime {
         }
     }
 
-    pub fn time_for_solar_angle(&self, angle: Angle, after_transit: bool) -> DateTime<Utc> {
+    pub fn time_for_solar_angle(&self, angle: Angle, after_transit: bool) -> DateTime<Tz> {
         let hours = ops::corrected_hour_angle(
             self.approx_transit,
             angle,
@@ -167,7 +165,7 @@ impl SolarTime {
         Self::setting_hour(hours, &self.date).unwrap()
     }
 
-    pub fn afternoon(&self, shadow_length: f64) -> DateTime<Utc> {
+    pub fn afternoon(&self, shadow_length: f64) -> DateTime<Tz> {
         let absolute_degrees = (self.observer.latitude - self.solar.declination.degrees).abs();
         let tangent = Angle::new(absolute_degrees);
         let inverse = shadow_length + tangent.radians().tan();
@@ -176,7 +174,7 @@ impl SolarTime {
         self.time_for_solar_angle(angle, true)
     }
 
-    fn setting_hour<Tz: TimeZone>(value: f64, date: &DateTime<Tz>) -> Option<DateTime<Utc>> {
+    fn setting_hour(value: f64, date: &DateTime<Tz>) -> Option<DateTime<Tz>> {
         if value.is_normal() {
             let calculated_hours = value.floor();
             let calculated_minutes = ((value - calculated_hours) * 60.0).floor();
@@ -199,24 +197,23 @@ impl SolarTime {
                 )
                 .unwrap();
 
-            Some(adjusted)
+            Some(adjusted.with_timezone(&date.timezone()))
         } else {
             // Nothing to do.
             None
         }
     }
 
-    fn hour_adjustment<Tz: TimeZone>(calculated_hours: f64, date: &DateTime<Tz>) -> (u32, DateTime<Utc>) {
+    fn hour_adjustment(calculated_hours: f64, date: &DateTime<Tz>) -> (u32, DateTime<Tz>) {
         // Adjust the hour to be within 0..=23,
         // wrapping around as needed; otherwise
         // chrono method will panic.
-        let date = date.to_utc();
         if calculated_hours < 0.0 {
             ((calculated_hours + 24.0) as u32, date.yesterday())
         } else if calculated_hours >= 24.0 {
             ((calculated_hours - 24.0) as u32, date.tomorrow())
         } else {
-            (calculated_hours as u32, date)
+            (calculated_hours as u32, date.clone())
         }
     }
 }

@@ -293,13 +293,13 @@ pub fn season_adjusted_morning_twilight<Tz: TimeZone>(
     day: u32,
     year: u32,
     sunrise: &DateTime<Tz>,
-) -> DateTime<Utc> {
+) -> DateTime<Tz> {
     let dyy = f64::from(days_since_solstice(day, year, latitude));
     let adjustment = twilight_adjustments(AdjustmentDaytime::Morning, latitude, dyy, Shafaq::General);
 
     let rounded_adjustment = (adjustment * -60.0).round() as i64;
     sunrise
-        .to_utc()
+        .clone()
         .checked_add_signed(Duration::seconds(rounded_adjustment))
         .unwrap()
 }
@@ -376,13 +376,13 @@ pub fn season_adjusted_evening_twilight<Tz: TimeZone>(
     year: u32,
     sunset: &DateTime<Tz>,
     shafaq: Shafaq,
-) -> DateTime<Utc> {
+) -> DateTime<Tz> {
     let dyy = f64::from(days_since_solstice(day, year, latitude));
     let adjustment = twilight_adjustments(AdjustmentDaytime::Evening, latitude, dyy, shafaq);
 
     let rounded_adjustment = (adjustment * 60.0).round() as i64;
     let adjusted_date = sunset
-        .to_utc()
+        .clone()
         .checked_add_signed(Duration::seconds(rounded_adjustment))
         .unwrap();
 
@@ -409,8 +409,8 @@ pub fn days_since_solstice(day_of_year: u32, year: u32, latitude: f64) -> u32 {
     }
 }
 
-pub fn adjust_time<Tz: TimeZone>(date: &DateTime<Tz>, minutes: i64) -> DateTime<Utc> {
-    date.to_utc()
+pub fn adjust_time<Tz: TimeZone>(date: &DateTime<Tz>, minutes: i64) -> DateTime<Tz> {
+    date.clone()
         .checked_add_signed(Duration::seconds(minutes * 60))
         .unwrap()
 }

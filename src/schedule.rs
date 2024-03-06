@@ -9,7 +9,9 @@
 //! This module provides the main objects that are used for calculating
 //! the prayer times.
 
-use chrono::{DateTime, Datelike, Days, Duration, TimeZone, Utc};
+use std::convert::AsRef;
+
+use chrono::{DateTime, Datelike, Days, Duration, Local, Offset, TimeZone, Utc};
 
 use crate::{
     astronomy::{
@@ -23,24 +25,25 @@ use crate::{
 /// A data struct to hold the timing for all
 /// prayers.
 #[derive(Clone)]
-pub struct PrayerTimes {
-    fajr: DateTime<Utc>,
-    sunrise: DateTime<Utc>,
-    dhuhr: DateTime<Utc>,
-    asr: DateTime<Utc>,
-    maghrib: DateTime<Utc>,
-    isha: DateTime<Utc>,
-    midnight: DateTime<Utc>,
-    qiyam: DateTime<Utc>,
-    fajr_tomorrow: DateTime<Utc>,
+pub struct PrayerTimes<Tz: TimeZone> {
+    fajr: DateTime<Tz>,
+    sunrise: DateTime<Tz>,
+    dhuhr: DateTime<Tz>,
+    asr: DateTime<Tz>,
+    maghrib: DateTime<Tz>,
+    isha: DateTime<Tz>,
+    midnight: DateTime<Tz>,
+    qiyam: DateTime<Tz>,
+    fajr_tomorrow: DateTime<Tz>,
 }
 
-impl std::fmt::Display for PrayerTimes {
+impl std::fmt::Display for PrayerTimes<Utc> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (hours, minutes) = self.time_remaining();
+        let current_time = Utc::now();
+        let (hours, minutes) = self.time_remaining(&current_time);
 
         let prayer_table = tabled::col![
-            chrono::Utc::now().format("%A, %-d %B, %C%y %H:%M:%S"),
+            current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
             tabled::row![
                 tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
                 tabled::col![
@@ -52,11 +55,11 @@ impl std::fmt::Display for PrayerTimes {
                 ],
                 tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
                 tabled::col![
-                    self.current(),
-                    self.next(),
+                    self.current(&current_time),
+                    self.next(&current_time),
                     format!("{hours}h {minutes}m"),
-                    self.midnight.format("%H:%M"),
-                    self.qiyam.format("%H:%M")
+                    self.midnight.time().format("%H:%M"),
+                    self.qiyam.time().format("%H:%M")
                 ]
             ]
         ];
@@ -65,20 +68,52 @@ impl std::fmt::Display for PrayerTimes {
     }
 }
 
-impl PrayerTimes {
-    #[must_use]
-    pub fn new<Tz: TimeZone>(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
-        let date = date.to_utc();
+impl std::fmt::Display for PrayerTimes<Local> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let current_time = Local::now();
+        let (hours, minutes) = self.time_remaining(&current_time);
 
+        let prayer_table = tabled::col![
+            current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
+            tabled::row![
+                tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
+                tabled::col![
+                    self.fajr.time().format("%H:%M"),
+                    self.dhuhr.time().format("%H:%M"),
+                    self.asr.time().format("%H:%M"),
+                    self.maghrib.time().format("%H:%M"),
+                    self.isha.time().format("%H:%M"),
+                ],
+                tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
+                tabled::col![
+                    self.current(&current_time),
+                    self.next(&current_time),
+                    format!("{hours}h {minutes}m"),
+                    self.midnight.time().format("%H:%M"),
+                    self.qiyam.time().format("%H:%M")
+                ]
+            ]
+        ];
+
+        write!(f, "{prayer_table}")
+    }
+}
+
+impl<Tz: TimeZone> PrayerTimes<Tz> {
+    #[must_use]
+    pub fn new(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
         let tomorrow = date.tomorrow();
         let solar_time = SolarTime::new(&date, coordinates);
         let solar_time_tomorrow = SolarTime::new(&tomorrow, coordinates);
 
         let asr = solar_time.afternoon(parameters.madhab.shadow().into());
-        let night = solar_time_tomorrow.sunrise.signed_duration_since(solar_time.sunset);
+        let night = solar_time_tomorrow
+            .clone()
+            .sunrise
+            .signed_duration_since(&solar_time.sunset);
 
-        let fajr =
-            Self::calculate_fajr(parameters, solar_time, night, coordinates, &date).rounded_minute(parameters.rounding);
+        let fajr = Self::calculate_fajr(parameters, &solar_time, night, coordinates, &date)
+            .rounded_minute(parameters.rounding);
         let sunrise = solar_time
             .sunrise
             .adjust_time(parameters.time_adjustments(Prayer::Sunrise))
@@ -97,7 +132,7 @@ impl PrayerTimes {
 
         // Calculate the middle of the night and qiyam times
         let (midnight, qiyam, fajr_tomorrow) =
-            Self::calculate_qiyam(maghrib, parameters, solar_time_tomorrow, coordinates, &tomorrow);
+            Self::calculate_qiyam(&maghrib, parameters, &solar_time_tomorrow, coordinates, &tomorrow);
 
         Self {
             fajr,
@@ -113,27 +148,27 @@ impl PrayerTimes {
     }
 
     #[must_use]
-    pub const fn time(&self, prayer: Prayer) -> DateTime<Utc> {
+    pub fn time(&self, prayer: Prayer) -> DateTime<Tz> {
         match prayer {
-            Prayer::Fajr => self.fajr,
-            Prayer::Sunrise => self.sunrise,
-            Prayer::Dhuhr => self.dhuhr,
-            Prayer::Asr => self.asr,
-            Prayer::Maghrib => self.maghrib,
-            Prayer::Isha => self.isha,
-            Prayer::Qiyam => self.qiyam,
-            Prayer::FajrTomorrow => self.fajr_tomorrow,
+            Prayer::Fajr => self.fajr.clone(),
+            Prayer::Sunrise => self.sunrise.clone(),
+            Prayer::Dhuhr => self.dhuhr.clone(),
+            Prayer::Asr => self.asr.clone(),
+            Prayer::Maghrib => self.maghrib.clone(),
+            Prayer::Isha => self.isha.clone(),
+            Prayer::Qiyam => self.qiyam.clone(),
+            Prayer::FajrTomorrow => self.fajr_tomorrow.clone(),
         }
     }
 
     #[must_use]
-    pub fn current(&self) -> Prayer {
-        self.current_time(&Utc::now())
+    pub fn current(&self, time: &DateTime<Tz>) -> Prayer {
+        self.current_time(time)
     }
 
     #[must_use]
-    pub fn next(&self) -> Prayer {
-        match self.current() {
+    pub fn next(&self, time: &DateTime<Tz>) -> Prayer {
+        match self.current(time) {
             Prayer::Fajr => Prayer::Sunrise,
             Prayer::Sunrise => Prayer::Dhuhr,
             Prayer::Dhuhr => Prayer::Asr,
@@ -146,14 +181,14 @@ impl PrayerTimes {
     }
 
     #[must_use]
-    pub fn time_remaining(&self) -> (u32, u32) {
+    pub fn time_remaining(&self, time: &DateTime<Tz>) -> (u32, u32) {
         let mut now = Utc::now();
-        if self.next() == Prayer::FajrTomorrow {
+        if self.next(time) == Prayer::FajrTomorrow {
             // If we're waiting for FajrTomorrow, we need to push the day
             // forward by 1 so that the time keeping is corrected
             now = now.checked_add_days(Days::new(1)).unwrap();
         }
-        let next_time = self.time(self.next());
+        let next_time = self.time(self.next(time));
         let now_to_next = next_time.signed_duration_since(now).num_seconds() as f64;
         let whole: f64 = now_to_next / 3600.0;
         let fract = whole.fract();
@@ -163,24 +198,22 @@ impl PrayerTimes {
         (hours, minutes)
     }
 
-    fn current_time<Tz: TimeZone>(&self, time: &DateTime<Tz>) -> Prayer {
-        let time = time.to_utc();
-
-        if self.fajr_tomorrow.signed_duration_since(time).num_seconds() <= 0 {
+    fn current_time(&self, time: &DateTime<Tz>) -> Prayer {
+        if self.fajr_tomorrow.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::FajrTomorrow
-        } else if self.qiyam.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.qiyam.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Qiyam
-        } else if self.isha.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.isha.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Isha
-        } else if self.maghrib.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.maghrib.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Maghrib
-        } else if self.asr.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.asr.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Asr
-        } else if self.dhuhr.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Dhuhr
-        } else if self.sunrise.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.sunrise.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Sunrise
-        } else if self.fajr.signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.fajr.clone().signed_duration_since(time).num_seconds() <= 0 {
             Prayer::Fajr
         } else {
             // In case no other time matches, it must be treated as Qiyam to prevent
@@ -189,17 +222,18 @@ impl PrayerTimes {
         }
     }
 
-    fn calculate_fajr<Tz: TimeZone>(
+    fn calculate_fajr(
         parameters: &Parameters,
-        solar_time: SolarTime,
+        solar_time: &SolarTime<Tz>,
         night: Duration,
         coordinates: Coordinates,
         prayer_date: &DateTime<Tz>,
-    ) -> DateTime<Utc> {
+    ) -> DateTime<Tz> {
         let mut fajr = if parameters.method == Method::MoonsightingCommittee && coordinates.latitude >= 55.0 {
             // special case for moonsighting committee above latitude 55
             let night_fraction = night.num_seconds() / 7;
             solar_time
+                .clone()
                 .sunrise
                 .checked_add_signed(Duration::seconds(-night_fraction))
                 .unwrap()
@@ -221,6 +255,7 @@ impl PrayerTimes {
             let night_fraction = portion * (night.num_seconds() as f64);
 
             solar_time
+                .clone()
                 .sunrise
                 .checked_add_signed(Duration::seconds(-night_fraction as i64))
                 .unwrap()
@@ -233,15 +268,16 @@ impl PrayerTimes {
         fajr.adjust_time(parameters.time_adjustments(Prayer::Fajr))
     }
 
-    fn calculate_isha<Tz: TimeZone>(
+    fn calculate_isha(
         parameters: &Parameters,
-        solar_time: SolarTime,
+        solar_time: SolarTime<Tz>,
         night: Duration,
         coordinates: Coordinates,
         prayer_date: &DateTime<Tz>,
-    ) -> DateTime<Utc> {
+    ) -> DateTime<Tz> {
         if parameters.isha_interval > 0 {
             solar_time
+                .clone()
                 .sunset
                 .checked_add_signed(Duration::seconds(i64::from(parameters.isha_interval * 60)))
                 .unwrap()
@@ -261,6 +297,7 @@ impl PrayerTimes {
                 let night_fraction = portion * (night.num_seconds() as f64);
 
                 solar_time
+                    .clone()
                     .sunset
                     .checked_add_signed(Duration::seconds(night_fraction as i64))
                     .unwrap()
@@ -270,6 +307,7 @@ impl PrayerTimes {
                 // special case for moonsighting committee above latitude 55
                 let night_fraction = night.num_seconds() / 7;
                 solar_time
+                    .clone()
                     .sunset
                     .checked_add_signed(Duration::seconds(night_fraction))
                     .unwrap()
@@ -286,19 +324,20 @@ impl PrayerTimes {
         .adjust_time(parameters.time_adjustments(Prayer::Isha))
     }
 
-    fn calculate_qiyam<Tz: TimeZone>(
-        current_maghrib: DateTime<Tz>,
+    fn calculate_qiyam(
+        current_maghrib: &DateTime<Tz>,
         parameters: &Parameters,
-        solar_time: SolarTime,
+        solar_time: &SolarTime<Tz>,
         coordinates: Coordinates,
         prayer_date: &DateTime<Tz>,
-    ) -> (DateTime<Utc>, DateTime<Utc>, DateTime<Utc>) {
+    ) -> (DateTime<Tz>, DateTime<Tz>, DateTime<Tz>) {
         let tomorrow = prayer_date.tomorrow();
         let solar_time_tomorrow = SolarTime::new(&tomorrow, coordinates);
-        let night = solar_time_tomorrow.sunrise.signed_duration_since(solar_time.sunset);
+        let night = solar_time_tomorrow.sunrise.signed_duration_since(&solar_time.sunset);
 
-        let tomorrow_fajr = Self::calculate_fajr(parameters, solar_time, night, coordinates, prayer_date);
+        let tomorrow_fajr = Self::calculate_fajr(parameters, &solar_time, night, coordinates, prayer_date);
         let night_duration = tomorrow_fajr
+            .clone()
             .signed_duration_since(current_maghrib.clone())
             .num_seconds() as f64;
         let middle_night_portion = (night_duration / 2.0) as i64;
@@ -309,28 +348,29 @@ impl PrayerTimes {
             .unwrap()
             .rounded_minute(Rounding::Nearest);
         let last_third_of_night = current_maghrib
+            .clone()
             .checked_add_signed(Duration::seconds(last_third_portion))
             .unwrap()
             .rounded_minute(Rounding::Nearest);
 
-        (middle_of_night.to_utc(), last_third_of_night.to_utc(), tomorrow_fajr)
+        (middle_of_night, last_third_of_night, tomorrow_fajr)
     }
 }
 
 /// A builder for the [`PrayerTimes`](struct.PrayerTimes.html) struct.
-pub struct PrayerSchedule {
-    date: Option<DateTime<Utc>>,
+pub struct PrayerSchedule<Tz: TimeZone> {
+    date: Option<DateTime<Tz>>,
     coordinates: Option<Coordinates>,
     params: Option<Parameters>,
 }
 
-impl Default for PrayerSchedule {
+impl<Tz: TimeZone> Default for PrayerSchedule<Tz> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl PrayerSchedule {
+impl<Tz: TimeZone> PrayerSchedule<Tz> {
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -340,17 +380,8 @@ impl PrayerSchedule {
         }
     }
 
-    #[must_use]
-    pub fn today() -> Self {
-        Self {
-            date: Some(chrono::Utc::now()),
-            coordinates: None,
-            params: None,
-        }
-    }
-
-    pub fn with_date<Tz: TimeZone>(&mut self, date: &DateTime<Tz>) -> &mut Self {
-        self.date = Some(date.to_utc());
+    pub fn with_date(&mut self, date: &DateTime<Tz>) -> &mut Self {
+        self.date = Some(date.clone());
         self
     }
 
@@ -364,13 +395,12 @@ impl PrayerSchedule {
         self
     }
 
-    pub fn build(&self) -> Result<PrayerTimes, String> {
-        if let (Some(date), Some(coordinates), Some(params)) = (self.date, self.coordinates, &self.params) {
-            Ok(PrayerTimes::new(&date, coordinates, params))
-        } else {
-            Err(String::from(
-                "Required information is needed in order to calculate the prayer times.",
-            ))
+    pub fn build(&self) -> Result<PrayerTimes<Tz>, String> {
+        match (&self.date, self.coordinates, &self.params) {
+            (Some(date), Some(coordinates), Some(params)) => Ok(PrayerTimes::new(date, coordinates, params)),
+            (x, y, z) => Err(format!(
+                "Required information is needed in order to calculate the prayer times.\n{x:?}\n{y:?}\n{z:?}",
+            )),
         }
     }
 }
