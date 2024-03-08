@@ -16,10 +16,10 @@
 //! let new_york_city = Coordinates::new(40.7128, -74.0059);
 //! let params        = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
 //! let prayers       = PrayerSchedule::<Utc>::now()
-//!                       .with_coordinates(new_york_city)
-//!                       .with_parameters(params)
-//!                       .build()
-//!                       .unwrap();
+//!                         .with_coordinates(new_york_city)
+//!                         .with_parameters(params)
+//!                         .build()
+//!                         .unwrap();
 //! ```
 
 #![warn(clippy::pedantic, clippy::nursery)]
@@ -131,12 +131,15 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "failed to compute prayer times")]
     fn calculate_times_using_the_builder_failure() {
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let result = PrayerSchedule::new().with_date(&date).with_parameters(params).build();
-
-        assert!(result.is_err(), "We were expecting an error, but received data.");
+        PrayerSchedule::new()
+            .with_date(&date)
+            .with_parameters(params)
+            .build()
+            .expect("failed to compute prayer times");
     }
 
     #[test]

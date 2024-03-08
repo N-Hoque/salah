@@ -202,127 +202,32 @@ impl Method {
 #[cfg(test)]
 mod tests {
     use float_cmp::assert_approx_eq;
+    use rstest::rstest;
 
     use super::*;
 
-    #[test]
-    fn parameters_for_muslim_world_league() {
-        let method = Method::MuslimWorldLeague;
+    #[rstest]
+    #[case::using_muslim_world_league(Method::MuslimWorldLeague, (18.0, 17.0), 0)]
+    #[case::using_egyptian(Method::Egyptian, (19.5, 17.5), 0)]
+    #[case::using_karachi(Method::Karachi, (18.0, 18.0), 0)]
+    #[case::using_umm_al_qura(Method::UmmAlQura, (18.5, 0.0), 90)]
+    #[case::using_dubai(Method::Dubai, (18.2, 18.2), 0)]
+    #[case::using_moonsighting_committee(Method::MoonsightingCommittee, (18.0, 18.0), 0)]
+    #[case::using_north_america(Method::NorthAmerica, (15.0, 15.0), 0)]
+    #[case::using_kuwait(Method::Kuwait, (18.0, 17.5), 0)]
+    #[case::using_qatar(Method::Qatar, (18.0, 0.0), 90)]
+    #[case::using_singapore(Method::Singapore, (20.0, 18.0), 0)]
+    #[case::using_other(Method::Other, (0.0, 0.0), 0)]
+    fn test_parameters_from_method(#[case] method: Method, #[case] angles: (f64, f64), #[case] interval: i32) {
+        const EPSILON: f64 = 0.000_000_1;
+
         let params = method.parameters();
 
-        assert_eq!(params.method, Method::MuslimWorldLeague);
-        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 17.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
+        let (fajr, isha) = angles;
 
-    #[test]
-    fn parameters_for_egyptian() {
-        let method = Method::Egyptian;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Egyptian);
-        assert_approx_eq!(f64, params.fajr_angle, 19.5, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 17.5, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_karachi() {
-        let method = Method::Karachi;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Karachi);
-        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_umm_al_qura() {
-        let method = Method::UmmAlQura;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::UmmAlQura);
-        assert_approx_eq!(f64, params.fajr_angle, 18.5, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 0.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 90);
-    }
-
-    #[test]
-    fn parameters_for_dubai() {
-        let method = Method::Dubai;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Dubai);
-        assert_approx_eq!(f64, params.fajr_angle, 18.2, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 18.2, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_moonsighting_committee() {
-        let method = Method::MoonsightingCommittee;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::MoonsightingCommittee);
-        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_north_america() {
-        let method = Method::NorthAmerica;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::NorthAmerica);
-        assert_approx_eq!(f64, params.fajr_angle, 15.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 15.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_kuwait() {
-        let method = Method::Kuwait;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Kuwait);
-        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 17.5, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_qatar() {
-        let method = Method::Qatar;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Qatar);
-        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 0.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 90);
-    }
-
-    #[test]
-    fn parameters_for_singapore() {
-        let method = Method::Singapore;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Singapore);
-        assert_approx_eq!(f64, params.fajr_angle, 20.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
-    }
-
-    #[test]
-    fn parameters_for_other() {
-        let method = Method::Other;
-        let params = method.parameters();
-
-        assert_eq!(params.method, Method::Other);
-        assert_approx_eq!(f64, params.fajr_angle, 0.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 0.0, epsilon = 0.000_000_1);
-        assert_eq!(params.isha_interval, 0);
+        assert_eq!(params.method, method);
+        assert_approx_eq!(f64, params.fajr_angle, fajr, epsilon = EPSILON);
+        assert_approx_eq!(f64, params.isha_angle, isha, epsilon = EPSILON);
+        assert_eq!(params.isha_interval, interval);
     }
 }

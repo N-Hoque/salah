@@ -199,6 +199,12 @@ impl Coordinates {
     }
 }
 
+impl From<(f64, f64)> for Coordinates {
+    fn from((latitude, longitude): (f64, f64)) -> Self {
+        Self::new(latitude, longitude)
+    }
+}
+
 impl Coordinates {
     #[must_use]
     pub const fn latitude_angle(&self) -> Angle {

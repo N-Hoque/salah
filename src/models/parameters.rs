@@ -13,6 +13,9 @@ use super::{
 
 use serde::{Deserialize, Serialize};
 
+const ONE_HALF: f64 = 0.5;
+const ONE_SEVENTH: f64 = 1.0 / 7.0;
+
 /// Settings that are used for determining the
 /// the correct prayer time.
 ///
@@ -67,8 +70,8 @@ impl Parameters {
     #[must_use]
     pub fn night_portions(&self) -> (f64, f64) {
         match self.high_latitude_rule {
-            HighLatitudeRule::MiddleOfTheNight => (1.0 / 2.0, 1.0 / 2.0),
-            HighLatitudeRule::SeventhOfTheNight => (1.0 / 7.0, 1.0 / 7.0),
+            HighLatitudeRule::MiddleOfTheNight => (ONE_HALF, ONE_HALF),
+            HighLatitudeRule::SeventhOfTheNight => (ONE_SEVENTH, ONE_SEVENTH),
             HighLatitudeRule::TwilightAngle => (self.fajr_angle / 60.0, self.isha_angle / 60.0),
         }
     }
@@ -120,54 +123,77 @@ mod tests {
 
     #[test]
     fn calculate_parameters_with_fajr_and_isha_angles() {
-        let params = Configuration::new().fajr_angle(18.0).isha_angle(18.0).build().unwrap();
+        const FAJR_ANGLE: f64 = 18.0;
+        const ISHA_ANGLE: f64 = FAJR_ANGLE;
 
-        assert_approx_eq!(f64, params.fajr_angle, 18.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 18.0, epsilon = 0.000_000_1);
+        let params = Configuration::new()
+            .fajr_angle(FAJR_ANGLE)
+            .isha_angle(ISHA_ANGLE)
+            .build()
+            .unwrap();
+
+        assert_approx_eq!(f64, params.fajr_angle, FAJR_ANGLE, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, ISHA_ANGLE, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
     }
 
     #[test]
     fn calculated_night_portions_middle_of_the_night() {
-        let params = Configuration::new().fajr_angle(18.0).isha_angle(18.0).build().unwrap();
+        const FAJR_ANGLE: f64 = 18.0;
+        const ISHA_ANGLE: f64 = FAJR_ANGLE;
 
-        assert_approx_eq!(f64, params.night_portions().0, 1.0 / 2.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.night_portions().1, 1.0 / 2.0, epsilon = 0.000_000_1);
+        let params = Configuration::new()
+            .fajr_angle(FAJR_ANGLE)
+            .isha_angle(ISHA_ANGLE)
+            .build()
+            .unwrap();
+
+        assert_approx_eq!(f64, params.night_portions().0, ONE_HALF, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().1, ONE_HALF, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn calculated_night_portions_seventh_of_the_night() {
+        const FAJR_ANGLE: f64 = 18.0;
+        const ISHA_ANGLE: f64 = FAJR_ANGLE;
+
         let params = Configuration::new()
-            .fajr_angle(18.0)
-            .isha_angle(18.0)
+            .fajr_angle(FAJR_ANGLE)
+            .isha_angle(ISHA_ANGLE)
             .high_latitude_rule(HighLatitudeRule::SeventhOfTheNight)
             .build()
             .unwrap();
 
-        assert_approx_eq!(f64, params.night_portions().0, 1.0 / 7.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.night_portions().1, 1.0 / 7.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().0, ONE_SEVENTH, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().1, ONE_SEVENTH, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn calculated_night_portions_twilight_angle() {
+        const FAJR_ANGLE: f64 = 10.0;
+        const ISHA_ANGLE: f64 = 10.0;
+
         let params = Configuration::new()
-            .fajr_angle(10.0)
-            .isha_angle(15.0)
+            .fajr_angle(FAJR_ANGLE)
+            .isha_angle(ISHA_ANGLE)
             .high_latitude_rule(HighLatitudeRule::TwilightAngle)
             .build()
             .unwrap();
 
-        assert_approx_eq!(f64, params.night_portions().0, 10.0 / 60.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.night_portions().1, 15.0 / 60.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().0, FAJR_ANGLE / 60.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.night_portions().1, ISHA_ANGLE / 60.0, epsilon = 0.000_000_1);
     }
 
     #[test]
     fn parameters_using_method_and_madhab() {
+        const FAJR_ANGLE: f64 = 15.0;
+        const ISHA_ANGLE: f64 = FAJR_ANGLE;
+
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
 
         assert_eq!(params.method, Method::NorthAmerica);
-        assert_approx_eq!(f64, params.fajr_angle, 15.0, epsilon = 0.000_000_1);
-        assert_approx_eq!(f64, params.isha_angle, 15.0, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.fajr_angle, FAJR_ANGLE, epsilon = 0.000_000_1);
+        assert_approx_eq!(f64, params.isha_angle, ISHA_ANGLE, epsilon = 0.000_000_1);
         assert_eq!(params.isha_interval, 0);
         assert_eq!(params.madhab, Madhab::Hanafi);
     }

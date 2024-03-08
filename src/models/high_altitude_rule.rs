@@ -42,31 +42,16 @@ impl HighLatitudeRule {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
     use super::*;
 
-    #[test]
-    fn recommended_rule_seventh_of_night() {
-        let location = Coordinates {
-            latitude: 48.983_226,
-            longitude: -3.216_649,
-        };
+    #[rstest]
+    #[case::normal_rule((45.983_226, -3.216_649), HighLatitudeRule::MiddleOfTheNight)]
+    #[case::high_lat_rule((48.983_226, -3.216_649), HighLatitudeRule::SeventhOfTheNight)]
+    fn test_recommended_rule_for_position(#[case] coords: (f64, f64), #[case] expected_rule: HighLatitudeRule) {
+        let location = Coordinates::from(coords);
 
-        assert_eq!(
-            HighLatitudeRule::recommended(location),
-            HighLatitudeRule::SeventhOfTheNight
-        );
-    }
-
-    #[test]
-    fn recommended_rule_middle_of_night() {
-        let location = Coordinates {
-            latitude: 45.983_226,
-            longitude: -3.216_649,
-        };
-
-        assert_eq!(
-            HighLatitudeRule::recommended(location),
-            HighLatitudeRule::MiddleOfTheNight
-        );
+        assert_eq!(HighLatitudeRule::recommended(location), expected_rule);
     }
 }

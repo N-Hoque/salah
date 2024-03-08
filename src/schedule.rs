@@ -456,91 +456,74 @@ impl PrayerSchedule<Utc> {
 #[cfg(test)]
 mod tests {
     use chrono::{TimeZone, Utc};
+    use rstest::{fixture, rstest};
 
     use super::*;
     use crate::models::madhab::Madhab;
 
-    #[test]
-    fn current_prayer_should_be_fajr() {
+    #[fixture]
+    #[once]
+    fn position() -> Coordinates {
+        Coordinates::new(35.7750, -78.6336)
+    }
+
+    #[fixture]
+    #[once]
+    fn parameters() -> Parameters {
+        Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi)
+    }
+
+    #[rstest]
+    #[case::should_be_fajr(
+        Utc.with_ymd_and_hms(2015, 7, 12, 9, 0, 0).unwrap(),
+        None,
+        Prayer::Fajr
+    )]
+    #[case::should_be_sunrise(
+        Utc.with_ymd_and_hms(2015, 7, 12, 11, 0, 0).unwrap(),
+        None,
+        Prayer::Sunrise
+    )]
+    #[case::should_be_dhuhr(
+        Utc.with_ymd_and_hms(2015, 7, 12, 19, 0, 0).unwrap(),
+        None,
+        Prayer::Dhuhr
+    )]
+    #[case::should_be_asr(
+        Utc.with_ymd_and_hms(2015, 7, 12, 22, 26, 0).unwrap(),
+        None,
+        Prayer::Asr
+    )]
+    #[case::should_be_maghrib(
+        Utc.with_ymd_and_hms(2015, 7, 12, 0,0, 0).unwrap(),
+        Some(Utc.with_ymd_and_hms(2015, 7, 13, 1,0, 0).unwrap()),
+        Prayer::Maghrib
+    )]
+    #[case::should_be_isha(
+        Utc.with_ymd_and_hms(2015, 7, 12, 0,0, 0).unwrap(),
+        Some(Utc.with_ymd_and_hms(2015, 7, 13,2,0, 0).unwrap()),
+        Prayer::Isha
+    )]
+    #[case::should_be_qiyam(
+        Utc.with_ymd_and_hms(2015, 7, 12, 8,0, 0).unwrap(),
+        None,
+        Prayer::Qiyam
+    )]
+    fn test_current_prayer(
+        position: &Coordinates,
+        parameters: &Parameters,
+        #[case] first_timestamp: DateTime<Utc>,
+        #[case] second_timestamp: Option<DateTime<Utc>>,
+        #[case] expected_prayer: Prayer,
+    ) {
         // Given the above DateTime, the Fajr prayer is at 2015-07-12T08:42:00Z
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 9, 0, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = local_date.with_timezone(&Utc);
+        let times = PrayerTimes::new(&first_timestamp, *position, parameters);
+        let current_prayer_time = second_timestamp.map_or_else(
+            || first_timestamp.with_timezone(&Utc),
+            |second_timestamp| second_timestamp,
+        );
 
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Fajr);
-    }
-
-    #[test]
-    fn current_prayer_should_be_sunrise() {
-        // Given the below DateTime, sunrise is at 2015-07-12T10:08:00Z
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 11, 0, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = local_date.with_timezone(&Utc);
-
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Sunrise);
-    }
-
-    #[test]
-    fn current_prayer_should_be_dhuhr() {
-        // Given the above DateTime, dhuhr prayer is at 2015-07-12T17:21:00Z
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 19, 0, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = local_date.with_timezone(&Utc);
-
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Dhuhr);
-    }
-
-    #[test]
-    fn current_prayer_should_be_asr() {
-        // Given the below DateTime, asr is at 2015-07-12T22:22:00Z
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 22, 26, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = local_date.with_timezone(&Utc);
-
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Asr);
-    }
-
-    #[test]
-    fn current_prayer_should_be_maghrib() {
-        // Given the below DateTime, maghrib is at 2015-07-13T00:32:00Z
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = Utc.with_ymd_and_hms(2015, 7, 13, 1, 0, 0).unwrap();
-
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Maghrib);
-    }
-
-    #[test]
-    fn current_prayer_should_be_isha() {
-        // Given the below DateTime, isha is at 2015-07-13T01:57:00Z
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = Utc.with_ymd_and_hms(2015, 7, 13, 2, 0, 0).unwrap();
-
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Isha);
-    }
-
-    #[test]
-    fn current_prayer_should_be_none() {
-        let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 8, 0, 0).unwrap();
-        let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        let coordinates = Coordinates::new(35.7750, -78.6336);
-        let times = PrayerTimes::new(&local_date, coordinates, &params);
-        let current_prayer_time = local_date.with_timezone(&Utc);
-
-        assert_eq!(times.current_time(&current_prayer_time), Prayer::Qiyam);
+        assert_eq!(times.current_time(&current_prayer_time), expected_prayer);
     }
 
     #[test]
@@ -554,29 +537,27 @@ mod tests {
             .with_parameters(params)
             .build();
 
-        match result {
-            Ok(schedule) => {
-                // fajr    = 2016-01-31 10:48:00 UTC
-                // sunrise = 2016-01-31 12:16:00 UTC
-                // dhuhr   = 2016-01-31 17:33:00 UTC
-                // asr     = 2016-01-31 20:20:00 UTC
-                // maghrib = 2016-01-31 22:43:00 UTC
-                // isha    = 2016-02-01 00:05:00 UTC
-                assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "10:48 AM");
-                assert_eq!(
-                    schedule.time(Prayer::Sunrise).format("%-l:%M %p").to_string(),
-                    "12:16 PM"
-                );
-                assert_eq!(schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(), "5:33 PM");
-                assert_eq!(schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(), "8:20 PM");
-                assert_eq!(
-                    schedule.time(Prayer::Maghrib).format("%-l:%M %p").to_string(),
-                    "10:43 PM"
-                );
-                assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "12:05 AM");
-            }
-
-            Err(_err) => unreachable!(),
+        if let Ok(schedule) = result {
+            // fajr    = 2016-01-31 10:48:00 UTC
+            // sunrise = 2016-01-31 12:16:00 UTC
+            // dhuhr   = 2016-01-31 17:33:00 UTC
+            // asr     = 2016-01-31 20:20:00 UTC
+            // maghrib = 2016-01-31 22:43:00 UTC
+            // isha    = 2016-02-01 00:05:00 UTC
+            assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "10:48 AM");
+            assert_eq!(
+                schedule.time(Prayer::Sunrise).format("%-l:%M %p").to_string(),
+                "12:16 PM"
+            );
+            assert_eq!(schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(), "5:33 PM");
+            assert_eq!(schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(), "8:20 PM");
+            assert_eq!(
+                schedule.time(Prayer::Maghrib).format("%-l:%M %p").to_string(),
+                "10:43 PM"
+            );
+            assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "12:05 AM");
+        } else {
+            unreachable!()
         }
     }
 
@@ -591,29 +572,27 @@ mod tests {
             .with_parameters(params)
             .build();
 
-        match result {
-            Ok(schedule) => {
-                // fajr    = 2016-01-01 06:34:00 UTC
-                // sunrise = 2016-01-01 08:19:00 UTC
-                // dhuhr   = 2016-01-01 11:25:00 UTC
-                // asr     = 2016-01-01 12:36:00 UTC
-                // maghrib = 2016-01-01 14:25:00 UTC
-                // isha    = 2016-01-01 16:02:00 UTC
-                assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "6:34 AM");
-                assert_eq!(
-                    schedule.time(Prayer::Sunrise).format("%-l:%M %p").to_string(),
-                    "8:19 AM"
-                );
-                assert_eq!(schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(), "11:25 AM");
-                assert_eq!(schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(), "12:36 PM");
-                assert_eq!(
-                    schedule.time(Prayer::Maghrib).format("%-l:%M %p").to_string(),
-                    "2:25 PM"
-                );
-                assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "4:02 PM");
-            }
-
-            Err(_err) => unreachable!(),
+        if let Ok(schedule) = result {
+            // fajr    = 2016-01-01 06:34:00 UTC
+            // sunrise = 2016-01-01 08:19:00 UTC
+            // dhuhr   = 2016-01-01 11:25:00 UTC
+            // asr     = 2016-01-01 12:36:00 UTC
+            // maghrib = 2016-01-01 14:25:00 UTC
+            // isha    = 2016-01-01 16:02:00 UTC
+            assert_eq!(schedule.time(Prayer::Fajr).format("%-l:%M %p").to_string(), "6:34 AM");
+            assert_eq!(
+                schedule.time(Prayer::Sunrise).format("%-l:%M %p").to_string(),
+                "8:19 AM"
+            );
+            assert_eq!(schedule.time(Prayer::Dhuhr).format("%-l:%M %p").to_string(), "11:25 AM");
+            assert_eq!(schedule.time(Prayer::Asr).format("%-l:%M %p").to_string(), "12:36 PM");
+            assert_eq!(
+                schedule.time(Prayer::Maghrib).format("%-l:%M %p").to_string(),
+                "2:25 PM"
+            );
+            assert_eq!(schedule.time(Prayer::Isha).format("%-l:%M %p").to_string(), "4:02 PM");
+        } else {
+            unreachable!()
         }
     }
 }

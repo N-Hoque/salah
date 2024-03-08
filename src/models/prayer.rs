@@ -41,13 +41,8 @@ impl Prayer {
         match self {
             Self::Fajr | Self::FajrTomorrow => "Fajr",
             Self::Sunrise => "Sunrise",
-            Self::Dhuhr => {
-                if Utc::now().weekday() == Weekday::Fri {
-                    "Jumu'ah"
-                } else {
-                    "Dhuhr"
-                }
-            }
+            Self::Dhuhr if Utc::now().weekday() == Weekday::Fri => "Jumu'ah",
+            Self::Dhuhr => "Dhuhr",
             Self::Asr => "Asr",
             Self::Maghrib => "Maghrib",
             Self::Isha => "Isha",
@@ -58,22 +53,31 @@ impl Prayer {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+
     use super::*;
 
+    #[rstest]
+    #[case::fajr(Prayer::Fajr, "Fajr")]
+    #[case::asr(Prayer::Asr, "Asr")]
+    #[case::maghrib(Prayer::Maghrib, "Maghrib")]
+    #[case::isha(Prayer::Isha, "Isha")]
+    #[case::qiyam(Prayer::Qiyam, "Qiyam")]
+    #[case::fajr_tomorrow(Prayer::FajrTomorrow, "Fajr")]
+    fn correct_prayer_name_for_non_dhuhr(#[case] prayer: Prayer, #[case] name: &'static str) {
+        assert_eq!(prayer.name(), name);
+    }
+
     #[test]
-    fn prayer_name_for_fajr_en_transliteration() {
-        assert_eq!(Prayer::Fajr.name(), "Fajr");
-        assert_eq!(Prayer::Sunrise.name(), "Sunrise");
-
-        if Utc::now().weekday() == Weekday::Fri {
-            assert_eq!(Prayer::Dhuhr.name(), "Jumu'ah");
-        } else {
-            assert_eq!(Prayer::Dhuhr.name(), "Dhuhr");
-        }
-
-        assert_eq!(Prayer::Asr.name(), "Asr");
-        assert_eq!(Prayer::Maghrib.name(), "Maghrib");
-        assert_eq!(Prayer::Isha.name(), "Isha");
-        assert_eq!(Prayer::Qiyam.name(), "Qiyam");
+    #[ignore = "time dependent (test result changes on Friday)"]
+    fn correct_prayer_name_for_dhuhr_prayer() {
+        assert_eq!(
+            if Utc::now().weekday() == Weekday::Fri {
+                "Jumu'ah"
+            } else {
+                "Dhuhr"
+            },
+            Prayer::Dhuhr.name()
+        );
     }
 }
