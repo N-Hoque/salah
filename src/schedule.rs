@@ -9,7 +9,7 @@
 //! This module provides the main objects that are used for calculating
 //! the prayer times.
 
-use chrono::{DateTime, Datelike, Days, Duration, Local, TimeZone, Utc};
+use chrono::{DateTime, Datelike, Duration, Local, TimeZone, Utc};
 
 use crate::{
     astronomy::{
@@ -24,6 +24,7 @@ use crate::{
 /// prayers.
 #[derive(Clone)]
 pub struct PrayerTimes<Tz: TimeZone> {
+    qiyam_yesterday: DateTime<Tz>,
     fajr: DateTime<Tz>,
     sunrise: DateTime<Tz>,
     dhuhr: DateTime<Tz>,
@@ -101,6 +102,8 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     #[must_use]
     pub fn new(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
         let tomorrow = date.tomorrow();
+        let yesterday = date.yesterday();
+        let solar_time_yesterday = SolarTime::new(&yesterday, coordinates);
         let solar_time = SolarTime::new(date, coordinates);
         let solar_time_tomorrow = SolarTime::new(&tomorrow, coordinates);
 
@@ -125,14 +128,23 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             .rounded_minute(parameters.rounding);
         let maghrib = ops::adjust_time(&solar_time.sunset, parameters.time_adjustments(Prayer::Maghrib))
             .rounded_minute(parameters.rounding);
+        let maghrib_yesterday = ops::adjust_time(
+            &solar_time_yesterday.sunset,
+            parameters.time_adjustments(Prayer::Maghrib),
+        )
+        .rounded_minute(parameters.rounding);
         let isha =
-            Self::calculate_isha(parameters, solar_time, night, coordinates, date).rounded_minute(parameters.rounding);
+            Self::calculate_isha(parameters, &solar_time, night, coordinates, date).rounded_minute(parameters.rounding);
 
         // Calculate the middle of the night and qiyam times
         let (midnight, qiyam, fajr_tomorrow) =
             Self::calculate_qiyam(&maghrib, parameters, &solar_time_tomorrow, coordinates, &tomorrow);
 
+        let (_, qiyam_yesterday, _) =
+            Self::calculate_qiyam(&maghrib_yesterday, parameters, &solar_time, coordinates, date);
+
         Self {
+            qiyam_yesterday,
             fajr,
             sunrise,
             dhuhr,
@@ -179,6 +191,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     #[must_use]
     pub const fn time(&self, prayer: Prayer) -> &DateTime<Tz> {
         match prayer {
+            Prayer::QiyamYesterday => &self.qiyam_yesterday,
             Prayer::Fajr => &self.fajr,
             Prayer::Sunrise => &self.sunrise,
             Prayer::Dhuhr => &self.dhuhr,
@@ -192,12 +205,15 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
 
     #[must_use]
     pub fn current(&self, time: &DateTime<Tz>) -> Prayer {
-        self.current_time(time)
+        // None means the current prayer time should be targeting the
+        // previous day's Qiyam.
+        self.current_time(time).map_or(Prayer::Qiyam, |prayer| prayer)
     }
 
     #[must_use]
     pub fn next(&self, time: &DateTime<Tz>) -> Prayer {
         match self.current(time) {
+            Prayer::QiyamYesterday => Prayer::Fajr,
             Prayer::Fajr => Prayer::Sunrise,
             Prayer::Sunrise => Prayer::Dhuhr,
             Prayer::Dhuhr => Prayer::Asr,
@@ -210,12 +226,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
 
     #[must_use]
     pub fn time_remaining(&self, time: &DateTime<Tz>) -> (u32, u32) {
-        let mut now = Utc::now();
-        if self.next(time) == Prayer::FajrTomorrow {
-            // If we're waiting for FajrTomorrow, we need to push the day
-            // forward by 1 so that the time keeping is corrected
-            now = now.checked_add_days(Days::new(1)).unwrap();
-        }
+        let now = Utc::now();
         let next_time = self.time(self.next(time));
         let now_to_next = next_time.clone().signed_duration_since(now).num_seconds() as f64;
         let whole: f64 = now_to_next / 3600.0;
@@ -226,27 +237,27 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         (hours, minutes)
     }
 
-    fn current_time(&self, time: &DateTime<Tz>) -> Prayer {
+    fn current_time(&self, time: &DateTime<Tz>) -> Option<Prayer> {
         if self.fajr_tomorrow.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::FajrTomorrow
+            Some(Prayer::FajrTomorrow)
         } else if self.qiyam.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Qiyam
+            Some(Prayer::Qiyam)
         } else if self.isha.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Isha
+            Some(Prayer::Isha)
         } else if self.maghrib.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Maghrib
+            Some(Prayer::Maghrib)
         } else if self.asr.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Asr
+            Some(Prayer::Asr)
         } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Dhuhr
+            Some(Prayer::Dhuhr)
         } else if self.sunrise.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Sunrise
+            Some(Prayer::Sunrise)
         } else if self.fajr.clone().signed_duration_since(time).num_seconds() <= 0 {
-            Prayer::Fajr
+            Some(Prayer::Fajr)
+        } else if self.qiyam_yesterday.clone().signed_duration_since(time).num_seconds() <= 0 {
+            Some(Prayer::QiyamYesterday)
         } else {
-            // In case no other time matches, it must be treated as Qiyam to prevent
-            // the library from failing when checking times *before* Fajr
-            Prayer::Qiyam
+            None
         }
     }
 
@@ -298,13 +309,14 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
 
     fn calculate_isha(
         parameters: &Parameters,
-        solar_time: SolarTime<Tz>,
+        solar_time: &SolarTime<Tz>,
         night: Duration,
         coordinates: Coordinates,
         prayer_date: &DateTime<Tz>,
     ) -> DateTime<Tz> {
         if parameters.isha_interval > 0 {
             solar_time
+                .clone()
                 .sunset
                 .checked_add_signed(Duration::try_seconds(i64::from(parameters.isha_interval * 60)).unwrap())
                 .unwrap()
@@ -334,6 +346,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
                 // special case for moonsighting committee above latitude 55
                 let night_fraction = night.num_seconds() / 7;
                 solar_time
+                    .clone()
                     .sunset
                     .checked_add_signed(Duration::try_seconds(night_fraction).unwrap())
                     .unwrap()
@@ -477,44 +490,44 @@ mod tests {
     #[case::should_be_fajr(
         Utc.with_ymd_and_hms(2015, 7, 12, 9, 0, 0).unwrap(),
         None,
-        Prayer::Fajr
+        Some(Prayer::Fajr)
     )]
     #[case::should_be_sunrise(
         Utc.with_ymd_and_hms(2015, 7, 12, 11, 0, 0).unwrap(),
         None,
-        Prayer::Sunrise
+        Some(Prayer::Sunrise)
     )]
     #[case::should_be_dhuhr(
         Utc.with_ymd_and_hms(2015, 7, 12, 19, 0, 0).unwrap(),
         None,
-        Prayer::Dhuhr
+        Some(Prayer::Dhuhr)
     )]
     #[case::should_be_asr(
         Utc.with_ymd_and_hms(2015, 7, 12, 22, 26, 0).unwrap(),
         None,
-        Prayer::Asr
+        Some(Prayer::Asr)
     )]
     #[case::should_be_maghrib(
         Utc.with_ymd_and_hms(2015, 7, 12, 0,0, 0).unwrap(),
         Some(Utc.with_ymd_and_hms(2015, 7, 13, 1,0, 0).unwrap()),
-        Prayer::Maghrib
+        Some(Prayer::Maghrib)
     )]
     #[case::should_be_isha(
         Utc.with_ymd_and_hms(2015, 7, 12, 0,0, 0).unwrap(),
         Some(Utc.with_ymd_and_hms(2015, 7, 13,2,0, 0).unwrap()),
-        Prayer::Isha
+        Some(Prayer::Isha)
     )]
-    #[case::should_be_qiyam(
+    #[case::should_be_None(
         Utc.with_ymd_and_hms(2015, 7, 12, 8,0, 0).unwrap(),
         None,
-        Prayer::Qiyam
+        None
     )]
     fn test_current_prayer(
         position: &Coordinates,
         parameters: &Parameters,
         #[case] first_timestamp: DateTime<Utc>,
         #[case] second_timestamp: Option<DateTime<Utc>>,
-        #[case] expected_prayer: Prayer,
+        #[case] expected_prayer: Option<Prayer>,
     ) {
         // Given the above DateTime, the Fajr prayer is at 2015-07-12T08:42:00Z
         let times = PrayerTimes::new(&first_timestamp, *position, parameters);

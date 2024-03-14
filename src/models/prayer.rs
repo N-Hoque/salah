@@ -10,6 +10,7 @@ use chrono::{Datelike, Utc, Weekday};
 /// sunrise, and Qiyam.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Prayer {
+    QiyamYesterday,
     Fajr,
     Sunrise,
     Dhuhr,
@@ -23,6 +24,7 @@ pub enum Prayer {
 impl std::fmt::Display for Prayer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::QiyamYesterday => write!(f, "QiyamYesterday"),
             Self::Fajr => write!(f, "Fajr"),
             Self::Sunrise => write!(f, "Sunrise"),
             Self::Dhuhr => write!(f, "Dhuhr"),
@@ -46,7 +48,7 @@ impl Prayer {
             Self::Asr => "Asr",
             Self::Maghrib => "Maghrib",
             Self::Isha => "Isha",
-            Self::Qiyam => "Qiyam",
+            Self::Qiyam | Self::QiyamYesterday => "Qiyam",
         }
     }
 }
@@ -64,6 +66,7 @@ mod tests {
     #[case::isha(Prayer::Isha, "Isha")]
     #[case::qiyam(Prayer::Qiyam, "Qiyam")]
     #[case::fajr_tomorrow(Prayer::FajrTomorrow, "Fajr")]
+    #[case::fajr_tomorrow(Prayer::QiyamYesterday, "Qiyam")]
     fn correct_prayer_name_for_non_dhuhr(#[case] prayer: Prayer, #[case] name: &'static str) {
         assert_eq!(prayer.name(), name);
     }
