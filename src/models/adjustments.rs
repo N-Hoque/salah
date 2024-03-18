@@ -10,7 +10,7 @@ use std::default::Default;
 /// Time adjustment for all prayer times.
 /// The value is specified in *minutes* and
 /// can be either positive or negative.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, derive_builder::Builder)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize, derive_builder::Builder)]
 #[builder(name = "Adjustment")]
 pub struct TimeAdjustment {
     #[builder(default)]

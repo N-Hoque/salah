@@ -82,7 +82,7 @@ mod tests {
         let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
-        let schedule = PrayerTimes::new(&local_date, coordinates, &params);
+        let schedule = PrayerTimes::new(&local_date, &coordinates, &params);
 
         assert_eq!(schedule.fajr().format("%-l:%M %p").to_string(), "8:42 AM");
         assert_eq!(schedule.sunrise().format("%-l:%M %p").to_string(), "10:08 AM");

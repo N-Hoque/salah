@@ -186,7 +186,7 @@ impl Div for Angle {
 
 /// The latitude and longitude associated with a location.
 /// Both latiude and longitude values are specified in degrees.
-#[derive(PartialEq, Debug, Copy, Clone, Deserialize, Serialize)]
+#[derive(PartialEq, Debug, Clone, Deserialize, Serialize)]
 pub struct Coordinates {
     pub latitude: f64,
     pub longitude: f64,

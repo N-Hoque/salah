@@ -181,7 +181,7 @@ pub fn corrected_transit(
 pub fn corrected_hour_angle(
     approximate_transit: f64,
     angle: Angle,
-    coordinates: Coordinates,
+    coordinates: &Coordinates,
     after_transit: bool,
     sidereal_time: Angle,
     right_ascension: Angle,

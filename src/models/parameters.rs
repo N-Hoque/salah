@@ -21,7 +21,7 @@ const ONE_SEVENTH: f64 = 1.0 / 7.0;
 ///
 /// It is recommended to use [Configuration](struct.Configuration.html) to build
 /// the parameters that are need.
-#[derive(PartialEq, Debug, Copy, Clone, Serialize, Deserialize, derive_builder::Builder)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize, derive_builder::Builder)]
 #[builder(name = "Configuration")]
 pub struct Parameters {
     pub method: Method,

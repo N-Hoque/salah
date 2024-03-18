@@ -13,7 +13,7 @@ pub struct Qiblah(f64);
 
 impl Qiblah {
     #[must_use]
-    pub fn new(location_coordinates: Coordinates) -> Self {
+    pub fn new(location_coordinates: &Coordinates) -> Self {
         // Equation from "Spherical Trigonometry For the use
         // of colleges and schools" page 50
         let makkah_coordinates = Coordinates::new(21.422_524_1, 39.826_181_8);
@@ -63,7 +63,7 @@ mod tests {
     #[case::from_jakarta_indonesia((-6.182_339_95, 106.842_871_54), 295.144_298_382_526_5)]
     fn test_qiblah_direction(#[case] coords: (f64, f64), #[case] expected_angle: f64) {
         let location = Coordinates::from(coords);
-        let qiblah = Qiblah::new(location);
+        let qiblah = Qiblah::new(&location);
 
         assert_approx_eq!(f64, qiblah.value(), expected_angle, epsilon = 0.000_000_1);
     }
@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn qiblah_direction_display() {
         let nyc = Coordinates::new(40.7128, -74.0059);
-        let qiblah = Qiblah::new(nyc);
+        let qiblah = Qiblah::new(&nyc);
         let actual_value = qiblah.to_string();
 
         assert!(actual_value.contains("58.4817635"));

@@ -44,7 +44,7 @@ pub struct PrayerTimes<Tz: TimeZone> {
 
 impl<Tz: TimeZone> PrayerTimes<Tz> {
     #[must_use]
-    pub fn new(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
+    pub fn new(date: &DateTime<Tz>, coordinates: &Coordinates, parameters: &Parameters) -> Self {
         let tomorrow = date.tomorrow();
         let yesterday = date.yesterday();
 
@@ -264,7 +264,7 @@ fn calculate_fajr<Tz: TimeZone>(
     parameters: &Parameters,
     solar_time: &SolarTime<Tz>,
     night: Duration,
-    coordinates: Coordinates,
+    coordinates: &Coordinates,
     prayer_date: &DateTime<Tz>,
 ) -> DateTime<Tz> {
     let mut fajr = if parameters.method == Method::MoonsightingCommittee && coordinates.latitude >= 55.0 {
@@ -311,7 +311,7 @@ fn calculate_isha<Tz: TimeZone>(
     parameters: &Parameters,
     solar_time: &SolarTime<Tz>,
     night: Duration,
-    coordinates: Coordinates,
+    coordinates: &Coordinates,
     prayer_date: &DateTime<Tz>,
 ) -> DateTime<Tz> {
     if parameters.isha_interval > 0 {
@@ -368,7 +368,7 @@ fn calculate_qiyam<Tz: TimeZone>(
     current_maghrib: &DateTime<Tz>,
     parameters: &Parameters,
     solar_time: &SolarTime<Tz>,
-    coordinates: Coordinates,
+    coordinates: &Coordinates,
     prayer_date: &DateTime<Tz>,
 ) -> (DateTime<Tz>, DateTime<Tz>, DateTime<Tz>) {
     let tomorrow = prayer_date.tomorrow();
@@ -442,7 +442,7 @@ impl<Tz: TimeZone> PrayerSchedule<Tz> {
     }
 
     pub fn build(&self) -> Result<PrayerTimes<Tz>, String> {
-        match (&self.date, self.coordinates, &self.params) {
+        match (&self.date, &self.coordinates, &self.params) {
             (Some(date), Some(coordinates), Some(params)) => Ok(PrayerTimes::new(date, coordinates, params)),
             (x, y, z) => Err(format!(
                 "Required information is needed in order to calculate the prayer times.\n{x:?}\n{y:?}\n{z:?}",
@@ -537,7 +537,7 @@ mod tests {
         #[case] expected_prayer: Prayer,
     ) {
         // Given the above DateTime, the Fajr prayer is at 2015-07-12T08:42:00Z
-        let times = PrayerTimes::new(&first_timestamp, *position, parameters);
+        let times = PrayerTimes::new(&first_timestamp, position, parameters);
         let current_prayer_time = second_timestamp.map_or_else(
             || first_timestamp.with_timezone(&Utc),
             |second_timestamp| second_timestamp,

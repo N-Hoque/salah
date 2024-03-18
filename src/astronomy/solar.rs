@@ -83,7 +83,7 @@ pub struct SolarTime<Tz: TimeZone> {
 }
 
 impl<Tz: TimeZone> SolarTime<Tz> {
-    pub fn new(date: &DateTime<Tz>, coordinates: Coordinates) -> Self {
+    pub fn new(date: &DateTime<Tz>, coordinates: &Coordinates) -> Self {
         // All calculation need to occur at 0h0m UTC
         let today = Utc
             .with_ymd_and_hms(date.year(), date.month(), date.day(), 0, 0, 0)
@@ -136,7 +136,7 @@ impl<Tz: TimeZone> SolarTime<Tz> {
 
         Self {
             date: date.clone(),
-            observer: coordinates,
+            observer: coordinates.clone(),
             solar,
             transit: Self::setting_hour(transit_time, date).unwrap(),
             sunrise: Self::setting_hour(sunrise_time, date).unwrap(),
@@ -151,7 +151,7 @@ impl<Tz: TimeZone> SolarTime<Tz> {
         let hours = ops::corrected_hour_angle(
             self.approx_transit,
             angle,
-            self.observer,
+            &self.observer,
             after_transit,
             self.solar.apparent_sidereal_time,
             self.solar.right_ascension,
@@ -306,7 +306,7 @@ mod tests {
     fn calculate_solar_time() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
-        let solar = SolarTime::new(&date, coordinates);
+        let solar = SolarTime::new(&date, &coordinates);
         let transit_date = Utc.with_ymd_and_hms(2015, 7, 12, 17, 20, 0).unwrap();
         let sunrise_date = Utc.with_ymd_and_hms(2015, 7, 12, 10, 8, 0).unwrap();
         let sunset_date = Utc.with_ymd_and_hms(2015, 7, 13, 00, 32, 0).unwrap();
@@ -320,7 +320,7 @@ mod tests {
     fn calculate_time_for_solar_angle() {
         let coordinates = Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0);
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
-        let solar = SolarTime::new(&date, coordinates);
+        let solar = SolarTime::new(&date, &coordinates);
         let angle = Angle::new(-6.0);
         let twilight_start = solar.time_for_solar_angle(angle, false);
         let twilight_end = solar.time_for_solar_angle(angle, true);
@@ -350,7 +350,7 @@ mod tests {
         let sunrise_time = ops::corrected_hour_angle(
             approx_transit,
             solar_altitude,
-            coordinates,
+            &coordinates,
             false,
             solar.apparent_sidereal_time,
             solar.right_ascension,

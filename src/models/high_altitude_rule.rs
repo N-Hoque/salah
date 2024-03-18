@@ -31,7 +31,7 @@ pub enum HighLatitudeRule {
 }
 
 impl HighLatitudeRule {
-    pub fn recommended(coordinates: Coordinates) -> Self {
+    pub fn recommended(coordinates: &Coordinates) -> Self {
         if coordinates.latitude > 48.0 {
             Self::SeventhOfTheNight
         } else {
@@ -52,6 +52,6 @@ mod tests {
     fn test_recommended_rule_for_position(#[case] coords: (f64, f64), #[case] expected_rule: HighLatitudeRule) {
         let location = Coordinates::from(coords);
 
-        assert_eq!(HighLatitudeRule::recommended(location), expected_rule);
+        assert_eq!(HighLatitudeRule::recommended(&location), expected_rule);
     }
 }
