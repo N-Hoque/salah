@@ -36,68 +36,6 @@ pub struct PrayerTimes<Tz: TimeZone> {
     fajr_tomorrow: DateTime<Tz>,
 }
 
-impl std::fmt::Display for PrayerTimes<Utc> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let current_time = Utc::now();
-        let (hours, minutes) = self.time_remaining(&current_time);
-
-        let prayer_table = tabled::col![
-            current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
-            tabled::row![
-                tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
-                tabled::col![
-                    self.fajr.time().format("%H:%M"),
-                    self.dhuhr.time().format("%H:%M"),
-                    self.asr.time().format("%H:%M"),
-                    self.maghrib.time().format("%H:%M"),
-                    self.isha.time().format("%H:%M"),
-                ],
-                tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
-                tabled::col![
-                    self.current(&current_time),
-                    self.next(&current_time),
-                    format!("{hours}h {minutes}m"),
-                    self.midnight.time().format("%H:%M"),
-                    self.qiyam.time().format("%H:%M")
-                ]
-            ]
-        ];
-
-        write!(f, "{prayer_table}")
-    }
-}
-
-impl std::fmt::Display for PrayerTimes<Local> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let current_time = Local::now();
-        let (hours, minutes) = self.time_remaining(&current_time);
-
-        let prayer_table = tabled::col![
-            current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
-            tabled::row![
-                tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
-                tabled::col![
-                    self.fajr.time().format("%H:%M"),
-                    self.dhuhr.time().format("%H:%M"),
-                    self.asr.time().format("%H:%M"),
-                    self.maghrib.time().format("%H:%M"),
-                    self.isha.time().format("%H:%M"),
-                ],
-                tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
-                tabled::col![
-                    self.current(&current_time),
-                    self.next(&current_time),
-                    format!("{hours}h {minutes}m"),
-                    self.midnight.time().format("%H:%M"),
-                    self.qiyam.time().format("%H:%M")
-                ]
-            ]
-        ];
-
-        write!(f, "{prayer_table}")
-    }
-}
-
 impl<Tz: TimeZone> PrayerTimes<Tz> {
     #[must_use]
     pub fn new(date: &DateTime<Tz>, coordinates: Coordinates, parameters: &Parameters) -> Self {
