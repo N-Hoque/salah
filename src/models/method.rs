@@ -73,6 +73,26 @@ pub enum Method {
     Other,
 }
 
+impl std::fmt::Display for Method {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::MuslimWorldLeague => write!(f, "Muslim World League"),
+            Self::Egyptian => write!(f, "Egyptian"),
+            Self::Karachi => write!(f, "Karachi"),
+            Self::UmmAlQura => write!(f, "Umm Al Qura"),
+            Self::Dubai => write!(f, "Dubai"),
+            Self::MoonsightingCommittee => write!(f, "Moonsighting Committee"),
+            Self::NorthAmerica => write!(f, "North America"),
+            Self::Kuwait => write!(f, "Kuwait"),
+            Self::Qatar => write!(f, "Qatar"),
+            Self::Singapore => write!(f, "Singapore"),
+            Self::Tehran => write!(f, "Tehran"),
+            Self::Turkey => write!(f, "Turkey"),
+            Self::Other => write!(f, "Other"),
+        }
+    }
+}
+
 impl Method {
     #[must_use]
     #[allow(clippy::too_many_lines)]
