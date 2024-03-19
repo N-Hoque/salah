@@ -168,7 +168,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             (Prayer::Qiyam, &self.qiyam)
         } else if self.isha.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Isha, &self.isha)
-        } else if self.maghrib.clone().signed_duration_since(time).num_seconds() <= 0 {
+        } else if self.maghrib.clone().signed_duration_since(time).num_seconds() < 0 {
             (Prayer::Maghrib, &self.maghrib)
         } else if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
             (Prayer::Forbidden(ForbiddenReason::DuringSunset), &self.asr)
