@@ -170,9 +170,9 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             (Prayer::Asr, &self.asr)
         } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Dhuhr, &self.dhuhr)
-        } else if self.sunrise.clone().signed_duration_since(time).num_minutes() <= -20 {
+        } else if self.sunrise.clone().signed_duration_since(time).num_minutes() < -20 {
             (Prayer::Sunrise, &self.sunrise)
-        } else if (-20..0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
+        } else if (-20..=0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
             (Prayer::Forbidden(ForbiddenReason::DuringSunrise), &self.sunrise)
         } else if self.fajr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Fajr, &self.fajr)
