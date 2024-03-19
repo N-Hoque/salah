@@ -20,7 +20,7 @@ use crate::{
     models::{
         method::Method,
         parameters::Parameters,
-        prayer::{ForbiddenReason, Prayer},
+        prayer::{Prayer, Reason},
         rounding::Rounding,
     },
 };
@@ -90,16 +90,30 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     {
         let (hours, minutes) = self.time_remaining(current_time);
 
+        let current_date = current_time.date_naive();
+
+        let dhuhr_name = if current_date.weekday() == chrono::Weekday::Fri {
+            Prayer::Dhuhr.name()
+        } else {
+            Prayer::Dhuhr.friday_name()
+        };
+
+        let current_name = if current_date.weekday() == chrono::Weekday::Fri {
+            self.current(current_time).0.name()
+        } else {
+            self.current(current_time).0.friday_name()
+        };
+
+        let next_name = if current_date.weekday() == chrono::Weekday::Fri {
+            self.next(current_time).0.name()
+        } else {
+            self.next(current_time).0.friday_name()
+        };
+
         let prayer_table = tabled::col![
             current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
             tabled::row![
-                tabled::col![
-                    "Fajr",
-                    Prayer::Dhuhr.name(&current_time.date_naive()),
-                    "Asr",
-                    "Maghrib",
-                    "Isha"
-                ],
+                tabled::col!["Fajr", dhuhr_name, "Asr", "Maghrib", "Isha"],
                 tabled::col![
                     self.fajr.time().format("%H:%M"),
                     self.dhuhr.time().format("%H:%M"),
@@ -109,8 +123,8 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
                 ],
                 tabled::col!["Current Prayer", "Next Prayer", "Time Left", "Midnight", "Qiyam"],
                 tabled::col![
-                    self.current(current_time).0,
-                    self.next(current_time).0,
+                    current_name,
+                    next_name,
                     format!("{hours}h {minutes}m"),
                     self.midnight.time().format("%H:%M"),
                     self.qiyam.time().format("%H:%M")
@@ -171,7 +185,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         } else if self.maghrib.clone().signed_duration_since(time).num_seconds() < 0 {
             (Prayer::Maghrib, &self.maghrib)
         } else if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
-            (Prayer::Forbidden(ForbiddenReason::DuringSunset), &self.asr)
+            (Prayer::Restricted(Reason::DuringSunset), &self.asr)
         } else if self.asr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Asr, &self.asr)
         } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
@@ -179,16 +193,13 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         } else if self.sunrise.clone().signed_duration_since(time).num_minutes() < -20 {
             (Prayer::Sunrise, &self.sunrise)
         } else if (-20..=0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
-            (Prayer::Forbidden(ForbiddenReason::DuringSunrise), &self.sunrise)
+            (Prayer::Restricted(Reason::DuringSunrise), &self.sunrise)
         } else if self.fajr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Fajr, &self.fajr)
         } else if self.qiyam_yesterday.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Qiyam, &self.qiyam_yesterday)
         } else {
-            (
-                Prayer::Forbidden(ForbiddenReason::AfterMidnight),
-                &self.midnight_yesterday,
-            )
+            (Prayer::Restricted(Reason::AfterMidnight), &self.midnight_yesterday)
         }
     }
 
@@ -200,28 +211,28 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
                 // There's roughly a 20 minute window during sunrise where it's
                 // forbidden to give Fajr prayer
                 if (-20..0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
-                    (Prayer::Forbidden(ForbiddenReason::DuringSunrise), &self.dhuhr)
+                    (Prayer::Restricted(Reason::DuringSunrise), &self.dhuhr)
                 } else {
                     (Prayer::Dhuhr, &self.dhuhr)
                 }
             }
-            Prayer::Forbidden(ForbiddenReason::DuringSunrise) => (Prayer::Dhuhr, &self.dhuhr),
+            Prayer::Restricted(Reason::DuringSunrise) => (Prayer::Dhuhr, &self.dhuhr),
             Prayer::Dhuhr => (Prayer::Asr, &self.asr),
             Prayer::Asr => {
                 // Similarly, there's a 20 minute window during sunset where
                 // it's forbidden to give Asr prayer
                 if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
-                    (Prayer::Forbidden(ForbiddenReason::DuringSunset), &self.maghrib)
+                    (Prayer::Restricted(Reason::DuringSunset), &self.maghrib)
                 } else {
                     (Prayer::Maghrib, &self.maghrib)
                 }
             }
-            Prayer::Forbidden(ForbiddenReason::DuringSunset) => (Prayer::Maghrib, &self.maghrib),
+            Prayer::Restricted(Reason::DuringSunset) => (Prayer::Maghrib, &self.maghrib),
             Prayer::Maghrib => (Prayer::Isha, &self.isha),
             // It is forbidden to pray past Islamic Midnight
             // and before the period of Qiyam
-            Prayer::Isha => (Prayer::Forbidden(ForbiddenReason::AfterMidnight), &self.midnight),
-            Prayer::Forbidden(ForbiddenReason::AfterMidnight) => (
+            Prayer::Isha => (Prayer::Restricted(Reason::AfterMidnight), &self.midnight),
+            Prayer::Restricted(Reason::AfterMidnight) => (
                 Prayer::Qiyam,
                 if time.date_naive().cmp(&self.qiyam.date_naive()).is_eq() {
                     &self.qiyam
