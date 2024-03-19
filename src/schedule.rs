@@ -93,7 +93,13 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         let prayer_table = tabled::col![
             current_time.format("%A, %-d %B, %C%y %H:%M:%S"),
             tabled::row![
-                tabled::col!["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"],
+                tabled::col![
+                    "Fajr",
+                    Prayer::Dhuhr.name(&current_time.date_naive()),
+                    "Asr",
+                    "Maghrib",
+                    "Isha"
+                ],
                 tabled::col![
                     self.fajr.time().format("%H:%M"),
                     self.dhuhr.time().format("%H:%M"),
