@@ -93,21 +93,21 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         let current_date = current_time.date_naive();
 
         let dhuhr_name = if current_date.weekday() == chrono::Weekday::Fri {
-            Prayer::Dhuhr.name()
-        } else {
             Prayer::Dhuhr.friday_name()
+        } else {
+            Prayer::Dhuhr.name()
         };
 
         let current_name = if current_date.weekday() == chrono::Weekday::Fri {
-            self.current(current_time).0.name()
-        } else {
             self.current(current_time).0.friday_name()
+        } else {
+            self.current(current_time).0.name()
         };
 
         let next_name = if current_date.weekday() == chrono::Weekday::Fri {
-            self.next(current_time).0.name()
-        } else {
             self.next(current_time).0.friday_name()
+        } else {
+            self.next(current_time).0.name()
         };
 
         let prayer_table = tabled::col![
@@ -180,9 +180,11 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             (Prayer::Fajr, &self.fajr_tomorrow)
         } else if self.qiyam.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Qiyam, &self.qiyam)
+        } else if self.midnight.clone().signed_duration_since(time).num_seconds() <= 0 {
+            (Prayer::Restricted(Reason::AfterMidnight), &self.midnight)
         } else if self.isha.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Isha, &self.isha)
-        } else if self.maghrib.clone().signed_duration_since(time).num_seconds() < 0 {
+        } else if self.maghrib.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Maghrib, &self.maghrib)
         } else if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
             (Prayer::Restricted(Reason::DuringSunset), &self.asr)
@@ -190,7 +192,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             (Prayer::Asr, &self.asr)
         } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Dhuhr, &self.dhuhr)
-        } else if self.sunrise.clone().signed_duration_since(time).num_minutes() < -20 {
+        } else if self.sunrise.clone().signed_duration_since(time).num_minutes() <= -20 {
             (Prayer::Sunrise, &self.sunrise)
         } else if (-20..=0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
             (Prayer::Restricted(Reason::DuringSunrise), &self.sunrise)
@@ -234,20 +236,13 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             Prayer::Isha => (Prayer::Restricted(Reason::AfterMidnight), &self.midnight),
             Prayer::Restricted(Reason::AfterMidnight) => (
                 Prayer::Qiyam,
-                if time.date_naive().cmp(&self.qiyam.date_naive()).is_eq() {
+                if time.date_naive().cmp(&self.midnight.date_naive()).is_eq() {
                     &self.qiyam
                 } else {
                     &self.qiyam_yesterday
                 },
             ),
-            Prayer::Qiyam => (
-                Prayer::Fajr,
-                if time.date_naive().cmp(&self.fajr.date_naive()).is_eq() {
-                    &self.fajr
-                } else {
-                    &self.fajr_tomorrow
-                },
-            ),
+            Prayer::Qiyam => (Prayer::Fajr, &self.fajr),
         }
     }
 
