@@ -84,7 +84,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         }
     }
 
-    pub fn display(&self, current_time: &DateTime<Tz>)
+    pub fn display(&self, current_time: &DateTime<Tz>) -> String
     where
         Tz::Offset: std::fmt::Display,
     {
@@ -132,7 +132,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             ]
         ];
 
-        println!("{prayer_table}");
+        prayer_table.to_string()
     }
 
     #[must_use]
