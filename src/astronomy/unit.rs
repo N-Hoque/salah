@@ -101,13 +101,13 @@ pub struct Angle {
 }
 
 impl Angle {
-    pub const fn new(value: f64) -> Self {
-        Self { degrees: value }
+    pub const fn new(degrees: f64) -> Self {
+        Self { degrees }
     }
 
-    pub fn from_radians(value: f64) -> Self {
+    pub fn from_radians(radians: f64) -> Self {
         Self {
-            degrees: value.to_degrees(),
+            degrees: radians.to_degrees(),
         }
     }
 
