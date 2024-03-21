@@ -17,7 +17,7 @@ Add the following to your `Cargo.toml` file under the `[dependencies]` section:
 salah = { git = "https://github.com/N-Hoque/salah", branch = "v0.8.0" }
 ```
 
-To get prayer times, use the `PrayerSchedule` struct passing in coordinates, date, and calculation parameters.
+To get prayer times, use the `Schedule` struct passing in coordinates, date, and calculation parameters.
 
 ```rust
 use salah::prelude::*;
@@ -25,7 +25,7 @@ use salah::prelude::*;
 let new_york_city = Coordinates::new(40.7128, -74.0059);
 let date          = Utc.with_ymd_and_hms(2019, 1, 25, 0, 0, 0).unwrap();
 let params        = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-let prayers       = PrayerSchedule::new()
+let prayers       = Schedule::new()
                         .with_date(date)
                         .with_coordinates(new_york_city)
                         .with_parameters(params)
@@ -150,32 +150,29 @@ Shafaq is used by the MoonsightingCommittee method to determine what type of twi
 
 ### Prayer Schedule
 
-The `PrayerSchedule` struct is a builder for the the `PrayerTimes` struct.
+The `Schedule` struct is a builder for the the `Times` struct.
 
 Once the `build()` method is invoked on it, a `PrayerTime` struct will be initialized and it will contain fields
 for all five prayer times, the time for sunrise, and for the period of Qiyam.
 
 The prayer time will be an instance of `DateTime<Tz>`.
-This means the times will be reported according to whatever timezone the `PrayerTimes` struct is built with.
+This means the times will be reported according to whatever timezone the `Times` struct is built with.
 
-For convenience, the PrayerSchedule struct has a `now()` method when instantiated via:
+For convenience, the Schedule struct has a `now()` method when instantiated via:
 
 ```rust
-let prayer_times_utc = PrayerSchedule::<Utc>::now();
-let prayer_times_local = PrayerSchedule::<Local>::now();
+let prayer_times_utc = Schedule::<Utc>::now();
+let prayer_times_local = Schedule::<Local>::now();
 ```
 
 This struct provides convenience methods for the prayer times to ease their usage and display.
 
 **PrayerTime**
 
-| Method                 | Description                                                                                                                                           |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name()`               | Returns the name of the payer transliterated in English.                                                                                              |
-| `time(prayer: Prayer)` | Returns the time of the prayer as a `DateTime<Tz>`. See the `DateTime` documentation for manipulating the return value.                               |
-| `current()`            | Returns the current prayer as the `Prayer` type.                                                                                                      |
-| `next()`               | Returns the next prayer as the `Prayer` type.                                                                                                         |
-| `time_remaining()`     | Returns a tuple with the _hours_ as its first element, and _minutes_ as its second element. The value is always in the context of the current prayer. |
+| Method                                | Description                                                                                                                                           |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `expected(time: &DateTime<Tz>)`       | Returns the current and next prayer with the name and time for that prayer type.                                                                      |
+| `time_remaining(time: &DateTime<Tz>)` | Returns a tuple with the _hours_ as its first element, and _minutes_ as its second element. The value is always in the context of the current prayer. |
 
 **Prayer**
 
@@ -189,12 +186,11 @@ use salah::prelude::*;
 let new_york_city = Coordinates::new(40.7128, -74.0059);
 let date          = Utc.with_ymd_and_hms(2019, 1, 25, 0, 0, 0).unwrap();
 let params        = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-let prayers       = PrayerSchedule::new()
+let prayers       = Schedule::new()
                         .with_date(date)
                         .with_coordinates(new_york_city)
                         .with_parameters(params)
-                        .build()
-                        .unwrap();
+                        .build();
 
 match prayers {
     Err(error) => println!("Could not calculate prayer times: {}", error)
@@ -224,12 +220,12 @@ Qiyam: 6:37 AM
 
 ## Convenience Utilities
 
-The `PrayerTimes` struct has functions for getting the current prayer and the next prayer.
+The `Times` struct has functions for getting the current prayer and the next prayer.
 You can also get the time for a specified prayer, making it easier to dynamically show countdowns until the next prayer.
 
 ```rust
 ...
-let prayers = PrayerSchedule::<Utc>::now()
+let prayers = Schedule::<Utc>::now()
                 .with_coordinates(new_york_city)
                 .with_parameters(params)
                 .build()
@@ -271,9 +267,3 @@ Our contributor code of conduct can be found in the `code-of-conduct.md` file.
 ## Acknowledgement
 
 This library is based on the [Adhan](https://github.com/batoulapps/Adhan) library by Batoul Apps. All astronomical calculations are high precision equations directly from the book [Astronomical Algorithms](http://www.willbell.com/math/mc1.htm) by Jean Meeus.
-
-## License
-
-Salah is licensed under a three clause BSD License. It basically means: do whatever you want with it as long as the copyright in Salah sticks around, the conditions are not modified and the disclaimer is present. Furthermore you must not use the names of the authors to promote derivatives of the software without written consent.
-
-The full license text can be found in the `LICENSE` file.
