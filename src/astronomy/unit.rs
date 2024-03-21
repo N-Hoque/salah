@@ -27,11 +27,10 @@ pub trait Stride {
     fn tomorrow(&self) -> Self;
     #[must_use]
     fn yesterday(&self) -> Self;
+    #[must_use]
     fn julian_day(&self) -> f64;
     #[must_use]
     fn adjust_time(&self, minutes: i64) -> Self;
-    #[must_use]
-    fn next_date(&self, fwd: bool) -> Self;
     #[must_use]
     fn rounded_minute(&self, rounding: Rounding) -> Self;
 }
@@ -39,12 +38,24 @@ pub trait Stride {
 impl<Tz: TimeZone> Stride for DateTime<Tz> {
     /// Returns the date/time for tomorrow.
     fn tomorrow(&self) -> Self {
-        self.next_date(true)
+        let ordinal = self.ordinal() + 1;
+
+        self.with_ordinal(ordinal)
+            .or_else(|| self.with_year(self.year() + 1).and_then(|x| x.with_ordinal(1)))
+            .unwrap()
     }
 
     /// Returns the date/time for yesterday.
     fn yesterday(&self) -> Self {
-        self.next_date(false)
+        let ordinal = self.ordinal() - 1;
+
+        self.with_ordinal(ordinal)
+            .or_else(|| {
+                self.with_year(self.year() - 1)
+                    .and_then(|x| x.with_month(12))
+                    .and_then(|x| x.with_day(31))
+            })
+            .unwrap()
     }
 
     /// Returns the Julian day.
@@ -81,26 +92,6 @@ impl<Tz: TimeZone> Stride for DateTime<Tz> {
         some_date
             .checked_add_signed(Duration::try_seconds(minutes * 60).unwrap())
             .unwrap()
-    }
-
-    fn next_date(&self, fwd: bool) -> Self {
-        let ordinal = if fwd { self.ordinal() + 1 } else { self.ordinal() - 1 };
-
-        self.with_ordinal(ordinal).map_or_else(
-            || {
-                if fwd {
-                    self.with_year(self.year() + 1).unwrap().with_ordinal(1).unwrap()
-                } else {
-                    self.with_year(self.year() - 1)
-                        .unwrap()
-                        .with_month(12)
-                        .unwrap()
-                        .with_day(31)
-                        .unwrap()
-                }
-            },
-            |dt| dt,
-        )
     }
 }
 
