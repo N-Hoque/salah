@@ -41,12 +41,12 @@ pub struct Times<Tz: TimeZone> {
     fajr_tomorrow: DateTime<Tz>,
 }
 
-struct PrayerInfo<'d, Tz: TimeZone> {
+struct EventInfo<'d, Tz: TimeZone> {
     name: Event,
     time: &'d DateTime<Tz>,
 }
 
-impl<'d, Tz: TimeZone> PrayerInfo<'d, Tz> {
+impl<'d, Tz: TimeZone> EventInfo<'d, Tz> {
     const fn prayer(&'d self) -> Event {
         self.name
     }
@@ -57,12 +57,12 @@ impl<'d, Tz: TimeZone> PrayerInfo<'d, Tz> {
 }
 
 pub struct ExpectedPrayers<'d, Tz: TimeZone> {
-    current: PrayerInfo<'d, Tz>,
-    next: PrayerInfo<'d, Tz>,
+    current: EventInfo<'d, Tz>,
+    next: EventInfo<'d, Tz>,
 }
 
 impl<'d, Tz: TimeZone> ExpectedPrayers<'d, Tz> {
-    pub const fn current_prayer(&'d self) -> Event {
+    pub const fn current_event(&'d self) -> Event {
         self.current.prayer()
     }
 
@@ -70,7 +70,7 @@ impl<'d, Tz: TimeZone> ExpectedPrayers<'d, Tz> {
         self.current.time()
     }
 
-    pub const fn next_prayer(&'d self) -> Event {
+    pub const fn next_event(&'d self) -> Event {
         self.next.prayer()
     }
 
@@ -217,8 +217,8 @@ impl<Tz: TimeZone> Times<Tz> {
         let (p2, d2) = self.next(time);
 
         ExpectedPrayers {
-            current: PrayerInfo { name: p1, time: d1 },
-            next: PrayerInfo { name: p2, time: d2 },
+            current: EventInfo { name: p1, time: d1 },
+            next: EventInfo { name: p2, time: d2 },
         }
     }
 
