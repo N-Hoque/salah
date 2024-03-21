@@ -42,6 +42,44 @@ pub struct PrayerTimes<Tz: TimeZone> {
     fajr_tomorrow: DateTime<Tz>,
 }
 
+struct PrayerInfo<'d, Tz: TimeZone> {
+    name: Prayer,
+    time: &'d DateTime<Tz>,
+}
+
+impl<'d, Tz: TimeZone> PrayerInfo<'d, Tz> {
+    const fn prayer(&'d self) -> Prayer {
+        self.name
+    }
+
+    const fn time(&'d self) -> &DateTime<Tz> {
+        self.time
+    }
+}
+
+pub struct ExpectedPrayers<'d, Tz: TimeZone> {
+    current: PrayerInfo<'d, Tz>,
+    next: PrayerInfo<'d, Tz>,
+}
+
+impl<'d, Tz: TimeZone> ExpectedPrayers<'d, Tz> {
+    pub const fn current_prayer(&'d self) -> Prayer {
+        self.current.prayer()
+    }
+
+    pub const fn current_time(&'d self) -> &DateTime<Tz> {
+        self.current.time()
+    }
+
+    pub const fn next_prayer(&'d self) -> Prayer {
+        self.next.prayer()
+    }
+
+    pub const fn next_time(&'d self) -> &DateTime<Tz> {
+        self.next.time()
+    }
+}
+
 impl<Tz: TimeZone> PrayerTimes<Tz> {
     #[must_use]
     pub fn new(date: &DateTime<Tz>, coordinates: &Coordinates, parameters: &Parameters) -> Self {
@@ -175,7 +213,17 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
         &self.qiyam
     }
 
-    pub fn current(&self, time: &DateTime<Tz>) -> (Prayer, &DateTime<Tz>) {
+    pub fn expected(&self, time: &DateTime<Tz>) -> ExpectedPrayers<Tz> {
+        let (p1, d1) = self.current(time);
+        let (p2, d2) = self.next(time);
+
+        ExpectedPrayers {
+            current: PrayerInfo { name: p1, time: d1 },
+            next: PrayerInfo { name: p2, time: d2 },
+        }
+    }
+
+    fn current(&self, time: &DateTime<Tz>) -> (Prayer, &DateTime<Tz>) {
         if self.fajr_tomorrow.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Prayer::Fajr, &self.fajr_tomorrow)
         } else if self.qiyam.clone().signed_duration_since(time).num_seconds() <= 0 {
@@ -206,7 +254,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     }
 
     #[must_use]
-    pub fn next(&self, time: &DateTime<Tz>) -> (Prayer, &DateTime<Tz>) {
+    fn next(&self, time: &DateTime<Tz>) -> (Prayer, &DateTime<Tz>) {
         match self.current(time).0 {
             Prayer::Fajr => (Prayer::Sunrise, &self.sunrise),
             Prayer::Sunrise => {
