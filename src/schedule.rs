@@ -295,9 +295,8 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
     }
 
     #[must_use]
-    pub fn time_remaining(&self, time: &DateTime<Tz>) -> (i64, i64) {
-        let now = Utc::now();
-        let (_, current_time) = self.current(time);
+    pub fn time_remaining(&self, now: &DateTime<Tz>) -> (i64, i64) {
+        let (_, current_time) = self.current(now);
         let (_, next_time) = self.next(current_time);
 
         let now_to_next = next_time.clone().signed_duration_since(now);
