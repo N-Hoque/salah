@@ -21,7 +21,6 @@ use crate::{
         method::Method,
         parameters::Parameters,
         prayer::{Prayer, Reason},
-        rounding::Rounding,
     },
 };
 
@@ -466,12 +465,12 @@ fn calculate_qiyam<Tz: TimeZone>(
         .clone()
         .checked_add_signed(Duration::try_seconds(middle_night_portion).unwrap())
         .unwrap()
-        .rounded_minute(Rounding::Nearest);
+        .rounded_minute(parameters.rounding);
     let last_third_of_night = current_maghrib
         .clone()
         .checked_add_signed(Duration::try_seconds(last_third_portion).unwrap())
         .unwrap()
-        .rounded_minute(Rounding::Nearest);
+        .rounded_minute(parameters.rounding);
 
     (middle_of_night, last_third_of_night, tomorrow_fajr)
 }
