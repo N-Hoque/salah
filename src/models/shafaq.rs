@@ -9,9 +9,10 @@
 /// for the different ways to calculate Isha.
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Shafaq {
     /// General is a combination of Ahmer and Abyad.
+    #[default]
     General,
 
     /// Ahmer means the twilight is the red glow in the sky.

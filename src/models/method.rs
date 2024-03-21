@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 /// Provides preset configuration for a few authorities
 /// for calculating prayer times.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Method {
     /// Muslim World League. Standard Fajr time with an angle of 18°.
     /// Earlier Isha time with an angle of 17°.
@@ -70,6 +70,7 @@ pub enum Method {
 
     /// Defaults to angles of 0°, should generally be used for making a custom method
     /// and setting your own values.
+    #[default]
     Other,
 }
 

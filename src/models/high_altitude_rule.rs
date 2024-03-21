@@ -9,11 +9,12 @@ use serde::{Deserialize, Serialize};
 
 /// Rule for approximating Fajr and Isha at high latitudes
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum HighLatitudeRule {
     /// Fajr won't be earlier than the midpoint of the night and isha
     /// won't be later than the midpoint of the night. This is the default
     /// value to prevent fajr and isha crossing boundaries.
+    #[default]
     MiddleOfTheNight,
 
     /// Fajr will never be earlier than the beginning of the last seventh of

@@ -8,22 +8,16 @@ use serde::{Deserialize, Serialize};
 use std::default::Default;
 
 /// Time adjustment for all prayer times.
-/// The value is specified in *minutes* and
-/// can be either positive or negative.
+///
+/// The value is specified in *minutes* and can be either positive or negative.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize, Serialize, derive_builder::Builder)]
-#[builder(name = "Adjustment")]
+#[builder(default, name = "Adjustment")]
 pub struct TimeAdjustment {
-    #[builder(default)]
     pub fajr: i64,
-    #[builder(default)]
     pub sunrise: i64,
-    #[builder(default)]
     pub dhuhr: i64,
-    #[builder(default)]
     pub asr: i64,
-    #[builder(default)]
     pub maghrib: i64,
-    #[builder(default)]
     pub isha: i64,
 }
 

@@ -21,8 +21,8 @@ const ONE_SEVENTH: f64 = 1.0 / 7.0;
 ///
 /// It is recommended to use [Configuration](struct.Configuration.html) to build
 /// the parameters that are need.
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize, derive_builder::Builder)]
-#[builder(name = "Configuration")]
+#[derive(PartialEq, Debug, Default, Clone, Serialize, Deserialize, derive_builder::Builder)]
+#[builder(default, name = "Configuration")]
 pub struct Parameters {
     pub method: Method,
     pub fajr_angle: f64,
@@ -93,19 +93,7 @@ impl Parameters {
 impl Configuration {
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            fajr_angle: Some(0.0),
-            maghrib_angle: Some(0.0),
-            isha_angle: Some(0.0),
-            method: Some(Method::Other),
-            isha_interval: Some(0),
-            madhab: Some(Madhab::Shafi),
-            high_latitude_rule: Some(HighLatitudeRule::MiddleOfTheNight),
-            adjustments: Some(TimeAdjustment::default()),
-            method_adjustments: Some(TimeAdjustment::default()),
-            rounding: Some(Rounding::Nearest),
-            shafaq: Some(Shafaq::General),
-        }
+        Self::default()
     }
 
     pub fn isha_interval(&mut self, isha_interval: i32) -> &mut Self {
