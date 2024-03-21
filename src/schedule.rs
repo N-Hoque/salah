@@ -283,7 +283,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             // and before the period of Qiyam
             Prayer::Isha => (
                 Prayer::Restricted(Reason::AfterMidnight),
-                if time.date_naive().cmp(&self.isha.date_naive()).is_eq() {
+                if time.date_naive() == self.isha.date_naive() {
                     &self.midnight
                 } else {
                     &self.midnight_yesterday
@@ -291,7 +291,7 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             ),
             Prayer::Restricted(Reason::AfterMidnight) => (
                 Prayer::Qiyam,
-                if time.date_naive().cmp(&self.midnight.date_naive()).is_eq() {
+                if time.date_naive() == self.midnight.date_naive() {
                     &self.qiyam
                 } else {
                     &self.qiyam_yesterday
