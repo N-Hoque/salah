@@ -7,10 +7,10 @@
 use serde::{Deserialize, Serialize};
 
 use super::{
-    adjustments::TimeAdjustment, high_altitude_rule::HighLatitudeRule, madhab::Madhab, method::Method,
+    adjustments::TimeAdjustment, event::Prayer, high_altitude_rule::HighLatitudeRule, madhab::Madhab, method::Method,
     rounding::Rounding, shafaq::Shafaq,
 };
-use crate::Prayer;
+use crate::Event;
 
 const ONE_HALF: f64 = 0.5;
 const ONE_SEVENTH: f64 = 1.0 / 7.0;
@@ -76,14 +76,14 @@ impl Parameters {
     }
 
     #[must_use]
-    pub const fn time_adjustments(&self, prayer: Prayer) -> i64 {
+    pub const fn time_adjustments(&self, prayer: Event) -> i64 {
         match prayer {
-            Prayer::Fajr => self.adjustments.fajr + self.method_adjustments.fajr,
-            Prayer::Sunrise => self.adjustments.sunrise + self.method_adjustments.sunrise,
-            Prayer::Dhuhr => self.adjustments.dhuhr + self.method_adjustments.dhuhr,
-            Prayer::Asr => self.adjustments.asr + self.method_adjustments.asr,
-            Prayer::Maghrib => self.adjustments.maghrib + self.method_adjustments.maghrib,
-            Prayer::Isha => self.adjustments.isha + self.method_adjustments.isha,
+            Event::Sunrise => self.adjustments.sunrise + self.method_adjustments.sunrise,
+            Event::Prayer(Prayer::Fajr) => self.adjustments.fajr + self.method_adjustments.fajr,
+            Event::Prayer(Prayer::Dhuhr) => self.adjustments.dhuhr + self.method_adjustments.dhuhr,
+            Event::Prayer(Prayer::Asr) => self.adjustments.asr + self.method_adjustments.asr,
+            Event::Prayer(Prayer::Maghrib) => self.adjustments.maghrib + self.method_adjustments.maghrib,
+            Event::Prayer(Prayer::Isha) => self.adjustments.isha + self.method_adjustments.isha,
             _ => 0,
         }
     }

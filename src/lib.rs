@@ -39,10 +39,10 @@ pub use crate::{
     astronomy::unit::{Coordinates, Stride},
     models::{
         adjustments::{Adjustment, TimeAdjustment},
+        event::Event,
         madhab::Madhab,
         method::Method,
         parameters::{Configuration, Parameters},
-        prayer::Prayer,
     },
     schedule::{Schedule, Times},
 };
@@ -59,13 +59,13 @@ pub mod prelude {
     #[doc(no_inline)]
     pub use crate::models::adjustments::{Adjustment, TimeAdjustment};
     #[doc(no_inline)]
+    pub use crate::models::event::Event;
+    #[doc(no_inline)]
     pub use crate::models::madhab::Madhab;
     #[doc(no_inline)]
     pub use crate::models::method::Method;
     #[doc(no_inline)]
     pub use crate::models::parameters::{Configuration, Parameters};
-    #[doc(no_inline)]
-    pub use crate::models::prayer::Prayer;
     #[doc(no_inline)]
     pub use crate::schedule::{Schedule, Times};
 }

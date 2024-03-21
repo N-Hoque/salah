@@ -18,9 +18,9 @@ use crate::{
         unit::{Angle, Coordinates, Stride},
     },
     models::{
+        event::{Event, Prayer, Reason},
         method::Method,
         parameters::Parameters,
-        prayer::{Prayer, Reason},
     },
 };
 
@@ -42,12 +42,12 @@ pub struct Times<Tz: TimeZone> {
 }
 
 struct PrayerInfo<'d, Tz: TimeZone> {
-    name: Prayer,
+    name: Event,
     time: &'d DateTime<Tz>,
 }
 
 impl<'d, Tz: TimeZone> PrayerInfo<'d, Tz> {
-    const fn prayer(&'d self) -> Prayer {
+    const fn prayer(&'d self) -> Event {
         self.name
     }
 
@@ -62,7 +62,7 @@ pub struct ExpectedPrayers<'d, Tz: TimeZone> {
 }
 
 impl<'d, Tz: TimeZone> ExpectedPrayers<'d, Tz> {
-    pub const fn current_prayer(&'d self) -> Prayer {
+    pub const fn current_prayer(&'d self) -> Event {
         self.current.prayer()
     }
 
@@ -70,7 +70,7 @@ impl<'d, Tz: TimeZone> ExpectedPrayers<'d, Tz> {
         self.current.time()
     }
 
-    pub const fn next_prayer(&'d self) -> Prayer {
+    pub const fn next_prayer(&'d self) -> Event {
         self.next.prayer()
     }
 
@@ -130,9 +130,9 @@ impl<Tz: TimeZone> Times<Tz> {
         let current_date = current_time.date_naive();
 
         let dhuhr_name = if current_date.weekday() == chrono::Weekday::Fri {
-            Prayer::Dhuhr.friday_name()
+            Event::Prayer(Prayer::Dhuhr).friday_name()
         } else {
-            Prayer::Dhuhr.name()
+            Event::Prayer(Prayer::Dhuhr).name()
         };
 
         let current_name = if current_date.weekday() == chrono::Weekday::Fri {
@@ -222,81 +222,81 @@ impl<Tz: TimeZone> Times<Tz> {
         }
     }
 
-    fn current(&self, time: &DateTime<Tz>) -> (Prayer, &DateTime<Tz>) {
+    fn current(&self, time: &DateTime<Tz>) -> (Event, &DateTime<Tz>) {
         if self.fajr_tomorrow.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Fajr, &self.fajr_tomorrow)
+            (Event::Prayer(Prayer::Fajr), &self.fajr_tomorrow)
         } else if self.qiyam.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Qiyam, &self.qiyam)
+            (Event::Qiyam, &self.qiyam)
         } else if self.midnight.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Restricted(Reason::AfterMidnight), &self.midnight)
+            (Event::Restricted(Reason::AfterMidnight), &self.midnight)
         } else if self.isha.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Isha, &self.isha)
+            (Event::Prayer(Prayer::Isha), &self.isha)
         } else if self.maghrib.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Maghrib, &self.maghrib)
+            (Event::Prayer(Prayer::Maghrib), &self.maghrib)
         } else if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
-            (Prayer::Restricted(Reason::DuringSunset), &self.asr)
+            (Event::Restricted(Reason::DuringSunset), &self.asr)
         } else if self.asr.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Asr, &self.asr)
+            (Event::Prayer(Prayer::Asr), &self.asr)
         } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Dhuhr, &self.dhuhr)
+            (Event::Prayer(Prayer::Dhuhr), &self.dhuhr)
         } else if self.sunrise.clone().signed_duration_since(time).num_minutes() <= -20 {
-            (Prayer::Sunrise, &self.sunrise)
+            (Event::Sunrise, &self.sunrise)
         } else if (-20..=0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
-            (Prayer::Restricted(Reason::DuringSunrise), &self.sunrise)
+            (Event::Restricted(Reason::DuringSunrise), &self.sunrise)
         } else if self.fajr.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Fajr, &self.fajr)
+            (Event::Prayer(Prayer::Fajr), &self.fajr)
         } else if self.qiyam_yesterday.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Prayer::Qiyam, &self.qiyam_yesterday)
+            (Event::Qiyam, &self.qiyam_yesterday)
         } else {
-            (Prayer::Restricted(Reason::AfterMidnight), &self.midnight_yesterday)
+            (Event::Restricted(Reason::AfterMidnight), &self.midnight_yesterday)
         }
     }
 
     #[must_use]
-    fn next(&self, time: &DateTime<Tz>) -> (Prayer, &DateTime<Tz>) {
+    fn next(&self, time: &DateTime<Tz>) -> (Event, &DateTime<Tz>) {
         match self.current(time).0 {
-            Prayer::Fajr => (Prayer::Sunrise, &self.sunrise),
-            Prayer::Sunrise => {
+            Event::Prayer(Prayer::Fajr) => (Event::Sunrise, &self.sunrise),
+            Event::Sunrise => {
                 // There's roughly a 20 minute window during sunrise where it's
                 // forbidden to give Fajr prayer
                 if (-20..0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
-                    (Prayer::Restricted(Reason::DuringSunrise), &self.dhuhr)
+                    (Event::Restricted(Reason::DuringSunrise), &self.dhuhr)
                 } else {
-                    (Prayer::Dhuhr, &self.dhuhr)
+                    (Event::Prayer(Prayer::Dhuhr), &self.dhuhr)
                 }
             }
-            Prayer::Restricted(Reason::DuringSunrise) => (Prayer::Dhuhr, &self.dhuhr),
-            Prayer::Dhuhr => (Prayer::Asr, &self.asr),
-            Prayer::Asr => {
+            Event::Restricted(Reason::DuringSunrise) => (Event::Prayer(Prayer::Dhuhr), &self.dhuhr),
+            Event::Prayer(Prayer::Dhuhr) => (Event::Prayer(Prayer::Asr), &self.asr),
+            Event::Prayer(Prayer::Asr) => {
                 // Similarly, there's a 20 minute window during sunset where
                 // it's forbidden to give Asr prayer
                 if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
-                    (Prayer::Restricted(Reason::DuringSunset), &self.maghrib)
+                    (Event::Restricted(Reason::DuringSunset), &self.maghrib)
                 } else {
-                    (Prayer::Maghrib, &self.maghrib)
+                    (Event::Prayer(Prayer::Maghrib), &self.maghrib)
                 }
             }
-            Prayer::Restricted(Reason::DuringSunset) => (Prayer::Maghrib, &self.maghrib),
-            Prayer::Maghrib => (Prayer::Isha, &self.isha),
+            Event::Restricted(Reason::DuringSunset) => (Event::Prayer(Prayer::Maghrib), &self.maghrib),
+            Event::Prayer(Prayer::Maghrib) => (Event::Prayer(Prayer::Isha), &self.isha),
             // It is forbidden to pray past Islamic Midnight
             // and before the period of Qiyam
-            Prayer::Isha => (
-                Prayer::Restricted(Reason::AfterMidnight),
+            Event::Prayer(Prayer::Isha) => (
+                Event::Restricted(Reason::AfterMidnight),
                 if time.date_naive() == self.isha.date_naive() {
                     &self.midnight
                 } else {
                     &self.midnight_yesterday
                 },
             ),
-            Prayer::Restricted(Reason::AfterMidnight) => (
-                Prayer::Qiyam,
+            Event::Restricted(Reason::AfterMidnight) => (
+                Event::Qiyam,
                 if time.date_naive() == self.midnight.date_naive() {
                     &self.qiyam
                 } else {
                     &self.qiyam_yesterday
                 },
             ),
-            Prayer::Qiyam => (Prayer::Fajr, &self.fajr),
+            Event::Qiyam => (Event::Prayer(Prayer::Fajr), &self.fajr),
         }
     }
 
@@ -321,21 +321,24 @@ fn calculate_night<Tz: TimeZone>(solar_time_tomorrow: &SolarTime<Tz>, solar_time
 }
 
 fn calculate_maghrib<Tz: TimeZone>(solar_time: &SolarTime<Tz>, parameters: &Parameters) -> DateTime<Tz> {
-    ops::adjust_time(&solar_time.sunset, parameters.time_adjustments(Prayer::Maghrib))
-        .rounded_minute(parameters.rounding)
+    ops::adjust_time(
+        &solar_time.sunset,
+        parameters.time_adjustments(Event::Prayer(Prayer::Maghrib)),
+    )
+    .rounded_minute(parameters.rounding)
 }
 
 fn calculate_asr<Tz: TimeZone>(solar_time: &SolarTime<Tz>, parameters: &Parameters) -> DateTime<Tz> {
     solar_time
         .afternoon(parameters.madhab.shadow().into())
-        .adjust_time(parameters.time_adjustments(Prayer::Asr))
+        .adjust_time(parameters.time_adjustments(Event::Prayer(Prayer::Asr)))
         .rounded_minute(parameters.rounding)
 }
 
 fn calculate_dhuhr<Tz: TimeZone>(solar_time: &SolarTime<Tz>, parameters: &Parameters) -> DateTime<Tz> {
     solar_time
         .transit
-        .adjust_time(parameters.time_adjustments(Prayer::Dhuhr))
+        .adjust_time(parameters.time_adjustments(Event::Prayer(Prayer::Dhuhr)))
         .rounded_minute(parameters.rounding)
 }
 
@@ -382,7 +385,7 @@ fn calculate_fajr<Tz: TimeZone>(
         fajr = safe_fajr;
     }
 
-    fajr.adjust_time(parameters.time_adjustments(Prayer::Fajr))
+    fajr.adjust_time(parameters.time_adjustments(Event::Prayer(Prayer::Fajr)))
         .rounded_minute(parameters.rounding)
 }
 
@@ -439,7 +442,7 @@ fn calculate_isha<Tz: TimeZone>(
             isha
         }
     }
-    .adjust_time(parameters.time_adjustments(Prayer::Isha))
+    .adjust_time(parameters.time_adjustments(Event::Prayer(Prayer::Isha)))
     .rounded_minute(parameters.rounding)
 }
 
@@ -478,7 +481,7 @@ fn calculate_qiyam<Tz: TimeZone>(
 fn calculate_sunrise<Tz: TimeZone>(solar_time: &SolarTime<Tz>, parameters: &Parameters) -> DateTime<Tz> {
     solar_time
         .sunrise
-        .adjust_time(parameters.time_adjustments(Prayer::Sunrise))
+        .adjust_time(parameters.time_adjustments(Event::Sunrise))
         .rounded_minute(parameters.rounding)
 }
 
@@ -576,44 +579,44 @@ mod tests {
     #[case::should_be_fajr(
         Utc.with_ymd_and_hms(2015, 7, 12, 9, 0, 0).unwrap(),
         None,
-        Prayer::Fajr
+        Event::Prayer(Prayer::Fajr)
     )]
     #[case::should_be_sunrise(
         Utc.with_ymd_and_hms(2015, 7, 12, 11, 0, 0).unwrap(),
         None,
-        Prayer::Sunrise
+        Event::Sunrise
     )]
     #[case::should_be_dhuhr(
         Utc.with_ymd_and_hms(2015, 7, 12, 19, 0, 0).unwrap(),
         None,
-        Prayer::Dhuhr
+        Event::Prayer(Prayer::Dhuhr)
     )]
     #[case::should_be_asr(
         Utc.with_ymd_and_hms(2015, 7, 12, 22, 26, 0).unwrap(),
         None,
-        Prayer::Asr
+        Event::Prayer(Prayer::Asr)
     )]
     #[case::should_be_maghrib(
         Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap(),
         Some(Utc.with_ymd_and_hms(2015, 7, 13, 1, 0, 0).unwrap()),
-        Prayer::Maghrib
+        Event::Prayer(Prayer::Maghrib)
     )]
     #[case::should_be_isha(
         Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap(),
         Some(Utc.with_ymd_and_hms(2015, 7, 13, 2, 0, 0).unwrap()),
-        Prayer::Isha
+        Event::Prayer(Prayer::Isha)
     )]
     #[case::should_be_qiyam(
         Utc.with_ymd_and_hms(2015, 7, 12, 8, 0, 0).unwrap(),
         None,
-        Prayer::Qiyam
+        Event::Qiyam
     )]
     fn test_current_prayer(
         position: &Coordinates,
         parameters: &Parameters,
         #[case] first_timestamp: DateTime<Utc>,
         #[case] second_timestamp: Option<DateTime<Utc>>,
-        #[case] expected_prayer: Prayer,
+        #[case] expected_prayer: Event,
     ) {
         // Given the above DateTime, the Fajr prayer is at 2015-07-12T08:42:00Z
         let times = Times::new(&first_timestamp, position, parameters);
