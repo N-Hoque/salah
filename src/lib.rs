@@ -14,7 +14,7 @@
 //!
 //! let new_york_city = Coordinates::new(40.7128, -74.0059);
 //! let params        = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-//! let prayers       = PrayerSchedule::<Utc>::now()
+//! let prayers       = Schedule::<Utc>::now()
 //!                         .with_coordinates(new_york_city)
 //!                         .with_parameters(params)
 //!                         .build()
@@ -44,7 +44,7 @@ pub use crate::{
         parameters::{Configuration, Parameters},
         prayer::Prayer,
     },
-    schedule::{PrayerSchedule, PrayerTimes},
+    schedule::{Schedule, Times},
 };
 
 /// A convenience module appropriate for glob imports (`use salah::prelude::*;`).
@@ -67,7 +67,7 @@ pub mod prelude {
     #[doc(no_inline)]
     pub use crate::models::prayer::Prayer;
     #[doc(no_inline)]
-    pub use crate::schedule::{PrayerSchedule, PrayerTimes};
+    pub use crate::schedule::{Schedule, Times};
 }
 
 #[cfg(test)]
@@ -82,7 +82,7 @@ mod tests {
         let local_date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
-        let schedule = PrayerTimes::new(&local_date, &coordinates, &params);
+        let schedule = Times::new(&local_date, &coordinates, &params);
 
         assert_eq!(schedule.fajr().format("%-l:%M %p").to_string(), "8:42 AM");
         assert_eq!(schedule.sunrise().format("%-l:%M %p").to_string(), "10:08 AM");
@@ -97,7 +97,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
-        let result = PrayerSchedule::new()
+        let result = Schedule::new()
             .with_date(&date)
             .with_coordinates(coordinates)
             .with_parameters(params)
@@ -122,7 +122,7 @@ mod tests {
     fn calculate_times_using_the_builder_failure() {
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
-        PrayerSchedule::new()
+        Schedule::new()
             .with_date(&date)
             .with_parameters(params)
             .build()
@@ -134,7 +134,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2015, 7, 12, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::NorthAmerica).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
-        let result = PrayerSchedule::new()
+        let result = Schedule::new()
             .with_date(&date)
             .with_coordinates(coordinates)
             .with_parameters(params)
@@ -159,7 +159,7 @@ mod tests {
 
         params.high_latitude_rule = HighLatitudeRule::MiddleOfTheNight;
 
-        let result = PrayerSchedule::new()
+        let result = Schedule::new()
             .with_date(&Utc.with_ymd_and_hms(2021, 1, 13, 0, 0, 0).unwrap())
             .with_coordinates(Coordinates::new(1.370_844_612_058_886, 103.801_456_440_605_52))
             .with_parameters(params)
@@ -201,7 +201,7 @@ mod tests {
         // however, the other times are within the 2 minute variance.
         params.method_adjustments = TimeAdjustment::new(-10, -2, 2, 1, 2, 4);
 
-        let result = PrayerSchedule::new()
+        let result = Schedule::new()
             .with_date(&Utc.with_ymd_and_hms(2021, 1, 12, 0, 0, 0).unwrap())
             .with_coordinates(Coordinates::new(-6.182_339_95, 106.842_871_54))
             .with_parameters(params)

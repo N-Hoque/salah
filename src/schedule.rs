@@ -27,7 +27,7 @@ use crate::{
 /// A data struct to hold the timing for all
 /// prayers.
 #[derive(Debug, Clone)]
-pub struct PrayerTimes<Tz: TimeZone> {
+pub struct Times<Tz: TimeZone> {
     midnight_yesterday: DateTime<Tz>,
     qiyam_yesterday: DateTime<Tz>,
     fajr: DateTime<Tz>,
@@ -79,7 +79,7 @@ impl<'d, Tz: TimeZone> ExpectedPrayers<'d, Tz> {
     }
 }
 
-impl<Tz: TimeZone> PrayerTimes<Tz> {
+impl<Tz: TimeZone> Times<Tz> {
     #[must_use]
     pub fn new(date: &DateTime<Tz>, coordinates: &Coordinates, parameters: &Parameters) -> Self {
         let tomorrow = date.tomorrow();
@@ -483,19 +483,19 @@ fn calculate_sunrise<Tz: TimeZone>(solar_time: &SolarTime<Tz>, parameters: &Para
 }
 
 /// A builder for the [`PrayerTimes`](struct.PrayerTimes.html) struct.
-pub struct PrayerSchedule<Tz: TimeZone> {
+pub struct Schedule<Tz: TimeZone> {
     date: Option<DateTime<Tz>>,
     coordinates: Option<Coordinates>,
     params: Option<Parameters>,
 }
 
-impl<Tz: TimeZone> Default for PrayerSchedule<Tz> {
+impl<Tz: TimeZone> Default for Schedule<Tz> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<Tz: TimeZone> PrayerSchedule<Tz> {
+impl<Tz: TimeZone> Schedule<Tz> {
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -520,9 +520,9 @@ impl<Tz: TimeZone> PrayerSchedule<Tz> {
         self
     }
 
-    pub fn build(&self) -> Result<PrayerTimes<Tz>, String> {
+    pub fn build(&self) -> Result<Times<Tz>, String> {
         match (&self.date, &self.coordinates, &self.params) {
-            (Some(date), Some(coordinates), Some(params)) => Ok(PrayerTimes::new(date, coordinates, params)),
+            (Some(date), Some(coordinates), Some(params)) => Ok(Times::new(date, coordinates, params)),
             (x, y, z) => Err(format!(
                 "Required information is needed in order to calculate the prayer times.\n{x:?}\n{y:?}\n{z:?}",
             )),
@@ -530,7 +530,7 @@ impl<Tz: TimeZone> PrayerSchedule<Tz> {
     }
 }
 
-impl PrayerSchedule<Local> {
+impl Schedule<Local> {
     #[must_use]
     pub fn now() -> Self {
         Self {
@@ -541,7 +541,7 @@ impl PrayerSchedule<Local> {
     }
 }
 
-impl PrayerSchedule<Utc> {
+impl Schedule<Utc> {
     #[must_use]
     pub fn now() -> Self {
         Self {
@@ -616,7 +616,7 @@ mod tests {
         #[case] expected_prayer: Prayer,
     ) {
         // Given the above DateTime, the Fajr prayer is at 2015-07-12T08:42:00Z
-        let times = PrayerTimes::new(&first_timestamp, position, parameters);
+        let times = Times::new(&first_timestamp, position, parameters);
         let current_prayer_time = second_timestamp.map_or_else(
             || first_timestamp.with_timezone(&Utc),
             |second_timestamp| second_timestamp,
@@ -630,7 +630,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2016, 1, 31, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::MoonsightingCommittee).with_madhab(Madhab::Shafi);
         let coordinates = Coordinates::new(35.7750, -78.6336);
-        let result = PrayerSchedule::new()
+        let result = Schedule::new()
             .with_date(&date)
             .with_coordinates(coordinates)
             .with_parameters(params)
@@ -659,7 +659,7 @@ mod tests {
         let date = Utc.with_ymd_and_hms(2016, 1, 1, 0, 0, 0).unwrap();
         let params = Parameters::from_method(Method::MoonsightingCommittee).with_madhab(Madhab::Hanafi);
         let coordinates = Coordinates::new(59.9094, 10.7349);
-        let result = PrayerSchedule::new()
+        let result = Schedule::new()
             .with_date(&date)
             .with_coordinates(coordinates)
             .with_parameters(params)
