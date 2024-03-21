@@ -281,7 +281,14 @@ impl<Tz: TimeZone> PrayerTimes<Tz> {
             Prayer::Maghrib => (Prayer::Isha, &self.isha),
             // It is forbidden to pray past Islamic Midnight
             // and before the period of Qiyam
-            Prayer::Isha => (Prayer::Restricted(Reason::AfterMidnight), &self.midnight),
+            Prayer::Isha => (
+                Prayer::Restricted(Reason::AfterMidnight),
+                if time.date_naive().cmp(&self.isha.date_naive()).is_eq() {
+                    &self.midnight
+                } else {
+                    &self.midnight_yesterday
+                },
+            ),
             Prayer::Restricted(Reason::AfterMidnight) => (
                 Prayer::Qiyam,
                 if time.date_naive().cmp(&self.midnight.date_naive()).is_eq() {
