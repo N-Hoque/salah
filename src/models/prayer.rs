@@ -65,6 +65,11 @@ impl Prayer {
             _ => self.name(),
         }
     }
+
+    #[must_use]
+    pub const fn is_daily(&self) -> bool {
+        !matches!(self, Self::Sunrise | Self::Qiyam | Self::Restricted(_))
+    }
 }
 
 #[cfg(test)]
