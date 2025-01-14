@@ -4,6 +4,7 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::astronomy::unit::Coordinates;

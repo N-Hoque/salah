@@ -4,16 +4,18 @@
 // Copyright (c) 2019-2022 Farhan Ahmed. All rights reserved.
 //
 
+use serde::{Deserialize, Serialize};
+
 /// Names of all obligatory prayers, sunrise, and Qiyam.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Event {
     Prayer(Prayer),
     Sunrise,
     Qiyam,
-    Restricted(Reason),
+    Restricted(Restriction),
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Prayer {
     Fajr,
     Dhuhr,
@@ -56,8 +58,8 @@ impl Prayer {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Reason {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Restriction {
     DuringSunrise,
     DuringSunset,
     AfterMidnight,
@@ -69,9 +71,9 @@ impl std::fmt::Display for Event {
             Self::Prayer(p) => write!(f, "{p}"),
             Self::Sunrise => write!(f, "Sunrise"),
             Self::Qiyam => write!(f, "Qiyam"),
-            Self::Restricted(Reason::DuringSunset) => write!(f, "DuringSunset"),
-            Self::Restricted(Reason::DuringSunrise) => write!(f, "DuringSunrise"),
-            Self::Restricted(Reason::AfterMidnight) => write!(f, "AfterMidnight"),
+            Self::Restricted(Restriction::DuringSunset) => write!(f, "DuringSunset"),
+            Self::Restricted(Restriction::DuringSunrise) => write!(f, "DuringSunrise"),
+            Self::Restricted(Restriction::AfterMidnight) => write!(f, "AfterMidnight"),
         }
     }
 }
@@ -83,9 +85,9 @@ impl Event {
             Self::Prayer(p) => p.name(),
             Self::Sunrise => "Sunrise",
             Self::Qiyam => "Qiyam",
-            Self::Restricted(Reason::DuringSunrise) => "During Sunrise (Cannot perform Fajr)",
-            Self::Restricted(Reason::DuringSunset) => "During Sunset (Cannot perform Asr)",
-            Self::Restricted(Reason::AfterMidnight) => "After Midnight (Cannot perform Isha)",
+            Self::Restricted(Restriction::DuringSunrise) => "During Sunrise (Cannot perform Fajr)",
+            Self::Restricted(Restriction::DuringSunset) => "During Sunset (Cannot perform Asr)",
+            Self::Restricted(Restriction::AfterMidnight) => "After Midnight (Cannot perform Isha)",
         }
     }
 

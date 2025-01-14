@@ -7,6 +7,7 @@
 /// Setting for the time for Asr prayer.
 ///
 /// For Hanafi madhab, Asr is roughly an hour later than the Shafi madhab.
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]

@@ -7,6 +7,7 @@
 /// Shafaq is the twilight in the sky. Different madhabs define the appearance of
 /// twilight differently. These values are used by the `MoonsightingComittee` method
 /// for the different ways to calculate Isha.
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]

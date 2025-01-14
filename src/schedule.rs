@@ -18,7 +18,7 @@ use crate::{
         unit::{Angle, Coordinates, Stride},
     },
     models::{
-        event::{Event, Prayer, Reason},
+        event::{Event, Prayer, Restriction},
         method::Method,
         parameters::Parameters,
     },
@@ -228,13 +228,13 @@ impl<Tz: TimeZone> Times<Tz> {
         } else if self.qiyam.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Event::Qiyam, &self.qiyam)
         } else if self.midnight.clone().signed_duration_since(time).num_seconds() <= 0 {
-            (Event::Restricted(Reason::AfterMidnight), &self.midnight)
+            (Event::Restricted(Restriction::AfterMidnight), &self.midnight)
         } else if self.isha.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Event::Prayer(Prayer::Isha), &self.isha)
         } else if self.maghrib.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Event::Prayer(Prayer::Maghrib), &self.maghrib)
         } else if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
-            (Event::Restricted(Reason::DuringSunset), &self.asr)
+            (Event::Restricted(Restriction::DuringSunset), &self.asr)
         } else if self.asr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Event::Prayer(Prayer::Asr), &self.asr)
         } else if self.dhuhr.clone().signed_duration_since(time).num_seconds() <= 0 {
@@ -242,13 +242,13 @@ impl<Tz: TimeZone> Times<Tz> {
         } else if self.sunrise.clone().signed_duration_since(time).num_minutes() <= -20 {
             (Event::Sunrise, &self.sunrise)
         } else if (-20..=0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
-            (Event::Restricted(Reason::DuringSunrise), &self.sunrise)
+            (Event::Restricted(Restriction::DuringSunrise), &self.sunrise)
         } else if self.fajr.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Event::Prayer(Prayer::Fajr), &self.fajr)
         } else if self.qiyam_yesterday.clone().signed_duration_since(time).num_seconds() <= 0 {
             (Event::Qiyam, &self.qiyam_yesterday)
         } else {
-            (Event::Restricted(Reason::AfterMidnight), &self.midnight_yesterday)
+            (Event::Restricted(Restriction::AfterMidnight), &self.midnight_yesterday)
         }
     }
 
@@ -260,35 +260,35 @@ impl<Tz: TimeZone> Times<Tz> {
                 // There's roughly a 20 minute window during sunrise where it's
                 // forbidden to give Fajr prayer
                 if (-20..0).contains(&self.sunrise.clone().signed_duration_since(time).num_minutes()) {
-                    (Event::Restricted(Reason::DuringSunrise), &self.dhuhr)
+                    (Event::Restricted(Restriction::DuringSunrise), &self.dhuhr)
                 } else {
                     (Event::Prayer(Prayer::Dhuhr), &self.dhuhr)
                 }
             }
-            Event::Restricted(Reason::DuringSunrise) => (Event::Prayer(Prayer::Dhuhr), &self.dhuhr),
+            Event::Restricted(Restriction::DuringSunrise) => (Event::Prayer(Prayer::Dhuhr), &self.dhuhr),
             Event::Prayer(Prayer::Dhuhr) => (Event::Prayer(Prayer::Asr), &self.asr),
             Event::Prayer(Prayer::Asr) => {
                 // Similarly, there's a 20 minute window during sunset where
                 // it's forbidden to give Asr prayer
                 if (0..=20).contains(&self.maghrib.clone().signed_duration_since(time).num_minutes()) {
-                    (Event::Restricted(Reason::DuringSunset), &self.maghrib)
+                    (Event::Restricted(Restriction::DuringSunset), &self.maghrib)
                 } else {
                     (Event::Prayer(Prayer::Maghrib), &self.maghrib)
                 }
             }
-            Event::Restricted(Reason::DuringSunset) => (Event::Prayer(Prayer::Maghrib), &self.maghrib),
+            Event::Restricted(Restriction::DuringSunset) => (Event::Prayer(Prayer::Maghrib), &self.maghrib),
             Event::Prayer(Prayer::Maghrib) => (Event::Prayer(Prayer::Isha), &self.isha),
             // It is forbidden to pray past Islamic Midnight
             // and before the period of Qiyam
             Event::Prayer(Prayer::Isha) => (
-                Event::Restricted(Reason::AfterMidnight),
+                Event::Restricted(Restriction::AfterMidnight),
                 if time.date_naive() == self.isha.date_naive() {
                     &self.midnight
                 } else {
                     &self.midnight_yesterday
                 },
             ),
-            Event::Restricted(Reason::AfterMidnight) => (
+            Event::Restricted(Restriction::AfterMidnight) => (
                 Event::Qiyam,
                 if time.date_naive() == self.midnight.date_naive() {
                     &self.qiyam
@@ -527,7 +527,7 @@ impl<Tz: TimeZone> Schedule<Tz> {
         match (&self.date, &self.coordinates, &self.params) {
             (Some(date), Some(coordinates), Some(params)) => Ok(Times::new(date, coordinates, params)),
             (x, y, z) => Err(format!(
-                "Required information is needed in order to calculate the prayer times.\n{x:?}\n{y:?}\n{z:?}",
+                "Required information is needed in order to calculate the prayer times.\n{x:?}\n{y:?}\n{z:?}\n",
             )),
         }
     }

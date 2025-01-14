@@ -7,6 +7,7 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 use chrono::{DateTime, Datelike, Duration, TimeZone, Timelike};
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{astronomy::ops, models::rounding::Rounding};
